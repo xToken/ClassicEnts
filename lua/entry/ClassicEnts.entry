@@ -1,0 +1,6 @@
+modEntry = [[
+	Client: lua/ClassicEnts_Client.lua,
+	Predict: lua/ClassicEnts_Predict.lua,
+	Server: lua/ClassicEnts_Server.lua,
+	Priority: 10
+]]
