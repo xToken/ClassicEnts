@@ -18,30 +18,50 @@ local kPathingWaypointObjectTable = { }
 
 local networkVars = { }
 
-local function UpdatePathingTable(name, waypointName, origin, angles, number)
+local function SortByNumber(path1, path2)
+    return path1.number < path2.number 
+end
+
+local function UpdatePathingTable(name, waypointName, origin, number, entId)
 	if not kPathingWaypointObjectTable[name] then
 		//New Parent Object
 		kPathingWaypointObjectTable[name] = { }
 	end
-	
 	//Insert
-	kPathingWaypointObjectTable[name][number] = {name = waypointName, number = number, origin = Vector(origin), angles = Angles(angles)}
+	table.insert(kPathingWaypointObjectTable[name], {name = waypointName, number = number, origin = Vector(origin), entId = entId})
+	//Sort
+	table.sort(kPathingWaypointObjectTable[name], SortByNumber)
 end
 
 local function UpdatePathingWaypointTable(self)
 	//Validate inputs and add to table, then sort.
-	if self.parentName then
-		local waypointFor = self.parentName
+	if self.moveableName then
+		local waypointFor = self.moveableName
 		local waypointName = self.name or self:GetId()
 		local waypointSequenceNum = self.number or 1
 		local origin = self:GetOrigin()
-		local angles = self:GetAngles()
-		UpdatePathingTable(waypointFor, waypointName, origin, angles, waypointSequenceNum)
+		UpdatePathingTable(waypointFor, waypointName, origin, waypointSequenceNum, self:GetId())
+	else
+		Shared.Message(string.format("Orphaned pathing waypoint %s located at %s", self.name, ToString(self:GetOrigin())))
 	end
 end
 
-function AddPathingWaypoint(name, waypointName, origin, angles, number)
-	UpdatePathingTable(name, waypointName, origin, angles, number)
+function AddPathingWaypoint(name, waypointName, origin, number, entId)
+	UpdatePathingTable(name, waypointName, origin, number, entId)
+end
+
+function UpdateWaypointOrigin(name, entId, origin)
+	local updated = false
+	if kPathingWaypointObjectTable[name] then
+		for i = 1, #kPathingWaypointObjectTable[name] do
+			if kPathingWaypointObjectTable[name][i].entId == entId then
+				kPathingWaypointObjectTable[name][i].origin = origin
+				updated = true
+				break
+			end
+		end
+	end
+	return updated
 end
 
 function LookupPathingWaypoints(name)

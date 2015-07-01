@@ -19,6 +19,8 @@ Script.Load("lua/GameEffectsMixin.lua")
 //timeToWeld controls how many seconds it takes to weld this for it to trigger.  Once trigger, it emits on emitChannel.  This entity can also
 //be toggled on listenChannel.  resetOnTrigger can be used to control what happens after this is welded.
 
+//Good default model - models/props/generic/terminals/generic_controlpanel_01.model
+
 class 'ControlledWeldableEmitter' (ScriptActor)
 
 ControlledWeldableEmitter.kMapName = "controlled_weldable_emitter"
@@ -39,10 +41,6 @@ AddMixinNetworkVars(ScaleModelMixin, networkVars)
 AddMixinNetworkVars(ControlledMixin, networkVars)
 AddMixinNetworkVars(GameEffectsMixin, networkVars)
 
-local function ToggleState(self)
-	self:SetIsEnabled(not self:GetIsEnabled())
-end
-
 function ControlledWeldableEmitter:OnCreate() 
 
     ScriptActor.OnCreate(self)
@@ -51,17 +49,17 @@ function ControlledWeldableEmitter:OnCreate()
     InitMixin(self, ClientModelMixin)
 	InitMixin(self, SignalListenerMixin)
 	InitMixin(self, SignalEmitterMixin)
+	InitMixin(self, LiveMixin)
+    InitMixin(self, TeamMixin)
+    InitMixin(self, GameEffectsMixin)
 	
-	self:SetUpdates(false)
+	//SignalMixin sets this on init, but I need to confirm its set on ent.
+	self.listenChannel = nil	
 	self:SetRelevancyDistance(kMaxRelevancyDistance)
 	
 	self.welded = 0
 	self.allowedTeam = 0
 	self.weldedTime = 0
-	
-	if Server then
-		self:RegisterSignalListener(function() ToggleState(self) end)
-	end
 
 end
 
@@ -81,12 +79,15 @@ function ControlledWeldableEmitter:OnInitialized()
         end
 		
 		InitMixin(self, EEMMixin)
-		//self:SetTeamNumber(self.allowedTeam == 0 and kTeam1Index or self.allowedTeam)
+		self:SetTeamNumber(kTeam1Index)
 		
 	end
 	
+	InitMixin(self, WeldableMixin)
 	InitMixin(self, ScaleModelMixin)
 	InitMixin(self, ControlledMixin)
+	
+	self:SetArmor(0)
 	
 end
 
@@ -130,11 +131,17 @@ function ControlledWeldableEmitter:GetCanBeWeldedOverride(doer)
 	if doer and doer.GetTeamNumber then
 		return self.welded < 1 and (self:GetAllowedTeam() == 0 or doer:GetTeamNumber() == self:GetAllowedTeam())
 	end
-	return false
+	return true
 end
 
 function ControlledWeldableEmitter:OnWeldOverride(doer, elapsedTime)
     if Server then
+		if self.weldTimeScales then
+			local team = self:GetTeam()
+			if team then
+				elapsedTime = elapsedTime / team:GetNumPlayers()
+			end
+		end
 		self.weldedTime = self.weldedTime + elapsedTime
 		self.welded = Clamp(self.weldedTime / self:GetWeldTime(), 0, 1)
 		if self.welded == 1 then
@@ -148,9 +155,7 @@ function ControlledWeldableEmitter:GetWeldPercentageOverride()
 end
 
 function ControlledWeldableEmitter:OnWeldCompleted()
-	if self.emitChannel then
-		self:EmitSignal(self.emitChannel, self.emitMessage)
-	end
+	self:EmitSignal(self.emitChannel, self.emitMessage)
 	self.weldedTime = 0
 end
 

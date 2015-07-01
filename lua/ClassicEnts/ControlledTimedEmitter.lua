@@ -36,6 +36,11 @@ local function UpdateEmitTime(self, deltaTime)
 		if self.totalTime >= self:GetEmitTime() then
 			//Trigger
 			self:EmitSignal(self.emitChannel, self.emitMessage)
+			if self.resetOnTrigger then
+				self.totalTime = 0
+			else
+				self.enabled = false
+			end
 		end
 		
 		self.lastUpdate = t
@@ -51,13 +56,14 @@ function ControlledTimedEmitter:OnCreate()
 	InitMixin(self, SignalListenerMixin)
 	InitMixin(self, SignalEmitterMixin)
 	
+	//SignalMixin sets this on init, but I need to confirm its set on ent.
+	self.listenChannel = nil
 	self:SetPropagate(Entity.Propagate_Never)
 	self:SetUpdates(true)
 	
 	self.lastUpdate = Shared.GetTime()
 	self.totalTime = 0
 	
-	self:RegisterSignalListener(function() ToggleState(self) end)
 	self:AddTimedCallback(UpdateEmitTime, 1)
 
 end
@@ -65,9 +71,8 @@ end
 function ControlledTimedEmitter:OnInitialized()
 
     Entity.OnInitialized(self)
-	
-	InitMixin(self, EEMMixin)
 	InitMixin(self, ControlledMixin)
+	InitMixin(self, EEMMixin)
 
 end
 

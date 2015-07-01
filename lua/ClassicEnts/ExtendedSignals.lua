@@ -18,16 +18,17 @@ local function LookupExtendedChannelByName(name)
 			return kExtendedStartingChannel + i
 		end
 	end
-	assert(false)
 end
 
 function LookupOrRegisterExtendedChannelToName(name)
 	assert(name ~= nil and name ~= "")
 	//Check to see if already registered.  Cannot be certain about load orders and want to make sure these get setup correctly.
 	if table.contains(kRegisteredExtendedChannels, name) then
+		//Shared.Message(string.format("Associating %s name to channel %s.", name, LookupExtendedChannelByName(name)))
 		return LookupExtendedChannelByName(name)
 	end
 	table.insert(kRegisteredExtendedChannels, name)
+	//Shared.Message(string.format("Registering %s name to channel %s.", name, kExtendedStartingChannel + #kRegisteredExtendedChannels))
 	return kExtendedStartingChannel + #kRegisteredExtendedChannels
 end
 
@@ -37,6 +38,9 @@ function SignalEmitterMixin:EmitSignal(channel, message)
 	for _, listener in ipairs(listeners) do
 		local inRange = (listener:GetOrigin() - self:GetOrigin() ):GetLengthSquaredXZ() <= (self.signalRange * self.signalRange)
 		if listener:GetListenChannel() == channel and (listener:GetIsGlobalListener() or self:GetIsGlobalEmitter() or inRange) then
+			if gDebugClassicEnts then
+				Shared.Message(string.format("Signalling %s class for channel %s.", listener:GetClassName(), channel))
+			end
 			listener:OnSignal(message)
 		end
 		

@@ -23,24 +23,16 @@ local networkVars =
 	dialogName = "string (" .. kMaxDialogNameLength .. ")",
 }
 
-AddMixinNetworkVars(ControlledMixin, networkVars)
-
-local function TriggerDialog(self)
-
-end
-
 function DialogListener:OnCreate() 
 
     Entity.OnCreate(self)
 	
 	InitMixin(self, SignalListenerMixin)
 	
+	//SignalMixin sets this on init, but I need to confirm its set on ent.
+	self.listenChannel = nil
 	self:SetUpdates(false)
 	self:SetRelevancyDistance(Math.infinity)
-	
-	if Server then
-		self:RegisterSignalListener(function() TriggerDialog(self) end)
-	end
 
 end
 

@@ -5,7 +5,7 @@
 
 Script.Load("lua/ScriptActor.lua")
 Script.Load("lua/PathingMixin.lua")
-Script.Load("lua/Mixins/ClientModelMixin.lua")
+Script.Load("lua/Mixins/ModelMixin.lua")
 Script.Load("lua/Mixins/SignalListenerMixin.lua")
 Script.Load("lua/ClassicEnts/EEMMixin.lua")
 Script.Load("lua/ClassicEnts/ScaleModelMixin.lua")
@@ -15,26 +15,30 @@ class 'ControlledMoveable' (ScriptActor)
 
 ControlledMoveable.kMapName = "controlled_moveable"
 
+local kModelName = "models/misc/door/door.model"
+local kModelNameClean = "models/misc/door/door_clean.model"
+local kDoorAnimationGraph = PrecacheAsset("models/misc/door/door.animation_graph")
 local kUpdateAutoOpenRate = 0.3
 local kElevatorPauseTime = 3
 local kMoveableUpdateRate = 0
 ControlledMoveable.kObjectTypes = enum( {'Door', 'Elevator', 'Gate'} )
 
-//These objects support basic interations/triggering, but not pausing once started.  Doors open then automatically close and can optionally open & close automatically.
+//These objects support basic interations/triggering, but not pausing once started.  
+//Doors open then automatically close and can optionally open & close automatically.
 //Elevators pause for a short period at each waypoint before continuing.
-//Doors and Elevators both return to their original waypoints.
-//Gates are ONLY controlled by emitters.
+//Gates work just like doors, however they do not open/close automatically.
 
 local networkVars = 
 {
 	moving = "boolean",
-	autoTrigger = "boolean",
 	destination = "vector",
-	objectType = "enum ControlledMoveable.kObjectTypes"
+	objectType = "enum ControlledMoveable.kObjectTypes",
+	open = "boolean",
+	animated = "boolean"
 }
 
 AddMixinNetworkVars(BaseModelMixin, networkVars)
-AddMixinNetworkVars(ClientModelMixin, networkVars)
+AddMixinNetworkVars(ModelMixin, networkVars)
 AddMixinNetworkVars(ScaleModelMixin, networkVars)
 AddMixinNetworkVars(ControlledMixin, networkVars)
 
@@ -67,7 +71,7 @@ local function UpdateAutoOpen(self, timePassed)
         if desiredOpenState and not self:GetIsMoving() then
 			self:MoveToWaypoint()
         elseif not desiredOpenState then
-			self:MoveToWaypoint(0)
+			self:MoveToWaypoint(-1)
         end
         
     end
@@ -76,86 +80,125 @@ local function UpdateAutoOpen(self, timePassed)
 
 end
 
-local function TriggerListener(self)
-	self:MoveToWaypoint()
-end
-
 function ControlledMoveable:OnCreate() 
 
     ScriptActor.OnCreate(self)
 	
 	InitMixin(self, BaseModelMixin)
-    InitMixin(self, ClientModelMixin)
+    InitMixin(self, ModelMixin)
 	InitMixin(self, PathingMixin)
 	InitMixin(self, SignalListenerMixin)
 	
+	//SignalMixin sets this on init, but I need to confirm its set on ent.
+	self.listenChannel = nil
 	self.moving = false
 	self.speed = 10
 	self.objectType = ControlledMoveable.kObjectTypes.Gate
-	self.autoTrigger = false
 	self.destination = Vector(0, 0, 0)
-	self.waypoint = 0
-	self.lastUpdate = Shared.GetTime()
+	self.waypoint = -1
+	self.open = false
+	self.animated = false
+	self.lastUpdated = Shared.GetTime()
 	
-	self:RegisterSignalListener(function() TriggerListener(self) end)
-
 end
 
 function ControlledMoveable:OnInitialized()
 
     ScriptActor.OnInitialized(self)
 	
+	InitMixin(self, ControlledMixin)
+	
 	if Server then
 	
+		local animGraph
+		if not self.model then
+			if self.clean then
+				self.model = kModelNameClean
+				animGraph = kDoorAnimationGraph
+				self.animated = true
+			else
+				self.model = kModelName
+				animGraph = kDoorAnimationGraph
+				self.animated = true
+			end
+		end
+		
 		self.modelName = self.model
         
         if self.modelName ~= nil then
         
             Shared.PrecacheModel(self.modelName)
-            self:SetModel(self.modelName)
+            self:SetModel(self.modelName, animGraph)
             
         end
 		
-		self:AddTimedCallback(ControlledMoveable.OnUpdateMoveable, kMoveableUpdateRate)
-		
 		InitMixin(self, EEMMixin)
-		
-		AddPathingWaypoint(self.name, "home", self:GetOrigin(), self:GetAngles(), 0)
 			
-		if self.autoTrigger and self.objectType == ControlledMoveable.kObjectTypes.Door then
-			//If we are a door that autoopens
+		if self.objectType == ControlledMoveable.kObjectTypes.Door then
 			self:AddTimedCallback(UpdateAutoOpen, kUpdateAutoOpenRate)
 		end
 		
 	end
 	
-	InitMixin(self, ScaleModelMixin)
-	InitMixin(self, ControlledMixin)
+	self.initialOpenState = self.open
 	
+	InitMixin(self, ScaleModelMixin)
+	
+end
+
+function ControlledMoveable:OverrideListener()
+	if self.objectType == ControlledMoveable.kObjectTypes.Door then
+		self:MoveToWaypoint(-1)
+		self:SetIsEnabled(not self:GetIsEnabled())
+	else
+		self:MoveToWaypoint()
+	end
 end
 
 function ControlledMoveable:MoveToWaypoint(number)
 
-	local waypoints = LookupPathingWaypoints(self.name)
-	if waypoints then
-		local target = number or self.waypoint + 1
-		if waypoints[target] then
-			//We are go
-			self.waypoint = waypoints[target].number
-			self.destination = waypoints[target].origin
-			self.destinationagles = waypoints[target].angles
-			self.moving = true
-		else
-			//Go home
-			self.waypoint = waypoints[0].number
-			self.destination = waypoints[0].origin
-			self.destinationagles = waypoints[0].angles
-			self.moving = true
+	if self.animated then
+		if self:GetIsEnabled() then
+			self.open = number ~= -1
 		end
 	else
-		assert(false)
+		local waypoints = LookupPathingWaypoints(self.name)
+		if waypoints then
+			number = number or (self.waypoint + 1)
+			local target = waypoints[1]
+			for i = 1, #waypoints do
+				if waypoints[i] and waypoints[i].number >= number then
+					target = waypoints[i]
+					break
+				end
+			end
+			if target and self.waypoint ~= target.number then
+				//We are go
+				if gDebugClassicEnts then
+					Shared.Message(string.format("Moveable %s moving from waypoint %s at %s to waypoint %s at %s.", self.name, self.waypoint, ToString(self:GetOrigin()), target.number, ToString(target.origin)))
+				end
+				self.waypoint = target.number
+				self.destination = target.origin
+				self.moving = true
+				self.lastUpdated = Shared.GetTime()
+				//Invalidate any current movements
+				if self.cursor then
+					self.cursor = nil
+					self.points = nil
+				end
+			end
+		else
+			Shared.Message(string.format("Moveable %s with invalid waypoints.", self.name))
+		end
 	end
 	
+end
+
+function ControlledMoveable:Reset()
+	if self.waypoint ~= -1 then
+		self:MoveToWaypoint(-1)
+	end
+	self.open = self.initialOpenState
 end
 
 function ControlledMoveable:GetIsMoving()
@@ -166,14 +209,6 @@ function ControlledMoveable:GetSpeed()
     return self.speed
 end
 
-function ControlledMoveable:PreventTurning()
-    return true
-end
-
-function ControlledMoveable:GetIsFlying()
-    return true
-end
-
 function ControlledMoveable:GetControllerSize()
     return GetTraceCapsuleFromExtents(self:GetExtents())
 end
@@ -182,25 +217,95 @@ function ControlledMoveable:GetCanBeUsed(player, useSuccessTable)
     useSuccessTable.useSuccess = false
 end
 
+function ControlledMoveable:CheckObjectTarget(endPoint)
+
+    // if we don't have a cursor, or the targetPoint differs, create a new path
+    if self.cursor == nil or (self.targetPoint - endPoint):GetLengthXZ() > 0.01 then
+
+        self.targetPoint = endPoint
+        self.points = { self:GetOrigin(), endPoint }
+        SmoothPathPoints( self.points, 0.5 , 40) 
+        
+        self.cursor = PathCursor():Init(self.points)
+        
+    end
+    
+    return true
+    
+end
+
+function ControlledMoveable:MoveObjectToTarget(physicsGroupMask, endPoint, movespeed, time)
+
+    PROFILE("ControlledMoveable:MoveObjectToTarget")
+    
+	//Target is never invalid here.
+    self:CheckObjectTarget(endPoint)
+    
+    // save the cursor in case we need to slow down
+    local origCursor = PathCursor():Clone(self.cursor)
+    self.cursor:Advance(movespeed, time)
+    
+    local maxSpeed = movespeed
+    
+    if maxSpeed < movespeed then
+        // use the copied cursor and discard the current cursor
+        self.cursor = origCursor
+        self.cursor:Advance(maxSpeed, time)
+    end
+    
+    // update our position to the cursors position, after adjusting for ground or hover
+    local newLocation = self.cursor:GetPosition()          
+    self:SetOrigin(newLocation)
+         
+    // we are done if we have reached the last point in the path or we have a close-enough condition
+    local done = self.cursor:TargetReached()
+    if done then
+    
+        self.cursor = nil
+        self.points = nil
+		self.moving = false
+		
+		//Force these maybe to help desync?
+		local physModel = self:GetPhysicsModel()
+		if physModel then
+			local coords = self:GetCoords()
+			coords.origin = self:GetOrigin()
+			physModel:SetCoords(coords)
+			physModel:SetBoneCoords(coords, CoordsArray())
+		end
+		
+    end
+    
+end
+
+function ControlledMoveable:OnUpdate(deltaTime)
+
+    PROFILE("ControlledMoveable:OnUpdate")
+	self:OnUpdateMoveable(deltaTime)
+	
+end
+
 function ControlledMoveable:OnUpdateMoveable(deltaTime)
 
     PROFILE("ControlledMoveable:OnUpdateMoveable")
-	
-	if self:GetIsEnabled() and self:GetIsMoving() then
-		local t = Shared.GetTime()
-		if not deltaTime then
-			deltaTime = t - self.lastUpdate
-		end
-		self:MoveToTarget(PhysicsMask.All, self.destination, self:GetSpeed(), deltaTime)
-		if self:IsTargetReached(self.destination, kAIMoveOrderCompleteDistance) then
-			//WE DID IT DAD!
-			self.moving = false
-		end
-		self.lastUpdate = t
+	if self:GetIsMoving() then
+		self:MoveObjectToTarget(PhysicsMask.All, self.destination, self:GetSpeed(), deltaTime)
 	end
-	
-	return true
 
+end
+
+function ControlledMoveable:OnUpdateAnimationInput(modelMixin)
+
+    PROFILE("ControlledMoveable:OnUpdateAnimationInput")
+	
+	if self.animated then
+    
+		local open = self.open
+		modelMixin:SetAnimationInput("open", open)
+		modelMixin:SetAnimationInput("lock", not self:GetIsEnabled())
+	
+	end
+    
 end
 
 Shared.LinkClassToMap("ControlledMoveable", ControlledMoveable.kMapName, networkVars)

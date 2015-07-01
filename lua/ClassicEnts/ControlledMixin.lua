@@ -7,7 +7,8 @@ ControlledMixin = CreateMixin(ControlledMixin)
 ControlledMixin.type = "Controlled"
 
 //Allows enabling/disabling of interactable entities.  Uses initial enable flag from map, defaults to true.
-//Also uses resetOnTrigger to determine change after trigger, defaults to true.
+//disableOnNotify & enableOnNotify determine what happens when this receives a signal.
+//
 
 ControlledMixin.networkVars =
 {
@@ -18,10 +19,11 @@ function ControlledMixin:__initmixin()
 	if self.enabled == nil then
 		self.enabled = true
 	end
-	if self.resetOnTrigger == nil then
-		self.resetOnTrigger = true
-	end
+	self.disableOnNotify = false
+	self.enableOnNotify = false
 	self.initialSetting = self.enabled
+	
+	self:RegisterSignalListener(function() self:OnReceiveSignal() end)
 end
 
 function ControlledMixin:GetIsEnabled()
@@ -32,19 +34,27 @@ function ControlledMixin:Reset()
 	self.enabled = self.initialSetting
 end
 
+function ControlledMixin:OnReceiveSignal()
+    if self.OverrideListener then
+		self:OverrideListener()
+	else
+		if self.disableOnNotify then
+			//disable
+			self.enabled = false
+		elseif self.enableOnNotify then
+			//enable
+			self.enabled = true		
+		else
+			//Default toggle
+			self.enabled = not self.enabled
+		end
+	end
+end
+
 function ControlledMixin:SetIsEnabled(enabled)
 	assert(type(enabled) == "boolean")
     self.enabled = enabled
 	if enabled and self.OnSetEnabled then
 		self:OnSetEnabled()
-	end
-end
-
-function ControlledMixin:EmitSignal(channel, message)
-	//Dont care about signal here.  Can only emit if enabled...
-	if self.resetOnTrigger then
-		self:Reset()
-	else
-		self.enabled = false
 	end
 end

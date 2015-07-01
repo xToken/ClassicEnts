@@ -19,11 +19,13 @@ Script.Load("lua/ClassicEnts/ControlledMixin.lua")
 //Uses values from ControlledMixin, also uses cooldown for delay between uses, allowedTeam for an allowed team number (0 = anyteam).
 //Emits on emitChannel when pushed, can be toggled on/off using listenChannel.  Can also use resetOnTrigger to make useable once.
 
+//Good default model - models/props/generic/terminals/generic_controlpanel_02.model
+
 class 'ControlledButtonEmitter' (ScriptActor)
 
 ControlledButtonEmitter.kMapName = "controlled_button_emitter"
 
-local kDefaultCooldown = 0.3 //Prevent spammage a bit.
+local kDefaultCooldown = 0.5 //Prevent spammage a bit.
 
 local networkVars = 
 {
@@ -37,10 +39,6 @@ AddMixinNetworkVars(ClientModelMixin, networkVars)
 AddMixinNetworkVars(ScaleModelMixin, networkVars)
 AddMixinNetworkVars(ControlledMixin, networkVars)
 
-local function ToggleButtonState(self)
-	self:SetIsEnabled(not self:GetIsEnabled())
-end
-
 function ControlledButtonEmitter:OnCreate() 
 
     ScriptActor.OnCreate(self)
@@ -50,22 +48,22 @@ function ControlledButtonEmitter:OnCreate()
 	InitMixin(self, SignalListenerMixin)
 	InitMixin(self, SignalEmitterMixin)
 	
+	//SignalMixin sets this on init, but I need to confirm its set on ent.
+	self.listenChannel = nil
 	self:SetUpdates(false)
 	self:SetRelevancyDistance(kMaxRelevancyDistance)
 	
 	self.timeLastUsed = 0
 	self.cooldown = 0
 	self.allowedTeam = 0
-	
-	if Server then
-		self:RegisterSignalListener(function() ToggleButtonState(self) end)
-	end
 
 end
 
 function ControlledButtonEmitter:OnInitialized()
 
     ScriptActor.OnInitialized(self)
+	
+	InitMixin(self, ControlledMixin)
 	
 	if Server then
 
@@ -83,7 +81,6 @@ function ControlledButtonEmitter:OnInitialized()
 	end
 
 	InitMixin(self, ScaleModelMixin)
-	InitMixin(self, ControlledMixin)
 	
 end
 
@@ -106,16 +103,14 @@ end
 
 function ControlledButtonEmitter:GetCanBeUsed(player, useSuccessTable)
 	local teamNumber = player:GetTeamNumber()
-    useSuccessTable.useSuccess = self:GetIsEnabled() and self.timeLastUsed + self:GetCooldown() <= Shared.GetTime() and self:GetIsEnabled() and (self:GetAllowedTeam() == 0 or self:GetAllowedTeam() == teamNumber)
+    useSuccessTable.useSuccess = self:GetIsEnabled() and self.timeLastUsed + self:GetCooldown() <= Shared.GetTime() and (self:GetAllowedTeam() == 0 or self:GetAllowedTeam() == teamNumber)
 end
 
 function ControlledButtonEmitter:OnUse(player, elapsedTime, useAttachPoint, usePoint, useSuccessTable)
 	//Trigger, basic validation
 	if Server then
-		if self.emitChannel then
-			self:EmitSignal(self.emitChannel, self.emitMessage)
-			self.timeLastUsed = Shared.GetTime()
-		end
+		self:EmitSignal(self.emitChannel, self.emitMessage)
+		self.timeLastUsed = Shared.GetTime()
 	end
 end
 

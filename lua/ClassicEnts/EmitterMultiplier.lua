@@ -22,6 +22,8 @@ local function TriggerAllChildren(self)
 		for i = 1, #self.emitChannels do
 			self:EmitSignal(self.emitChannels[i], self.emitMessage)
 		end
+	elseif self.emitChannel then
+		self:EmitSignal(self.emitChannel, self.emitMessage)
 	end
 end
 
@@ -32,10 +34,10 @@ function EmitterMultiplier:OnCreate()
 	InitMixin(self, SignalEmitterMixin)
 	InitMixin(self, SignalListenerMixin)
 	
+	//SignalMixin sets this on init, but I need to confirm its set on ent.
+	self.listenChannel = nil
 	self:SetPropagate(Entity.Propagate_Never)
     self:SetUpdates(false)
-	
-	self.emitChannel = 0
 	
 	self:RegisterSignalListener(function() TriggerAllChildren(self) end)
 
