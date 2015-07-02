@@ -1,5 +1,7 @@
-// 
-// 
+// Natural Selection 2 'Classic Entities Mod'
+// Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
+// Designed to work with maps developed for Extra Entities Mod.  
+// Source located at - https://github.com/xToken/ClassicEnts
 // lua\EEMMixin.lua
 // - Dragon
 
@@ -73,7 +75,9 @@ local function CheckRequiredSiegeDoorEntities(self, doorTime)
 	if #waypoints == 1 then
 		//Missing waypoint, gen default up waypoint
 		BuildPathingEntityFromDirection(self, 0)
-		Shared.Message(string.format("Building default up waypoint for %s as no valid waypoints provided in map.", self.name))
+		if gDebugClassicEnts then
+			Shared.Message(string.format("Building default up waypoint for %s as no valid waypoints provided in map.", self.name))
+		end
 	end
 	//Check triggers
 	local matching = false
@@ -97,7 +101,9 @@ local function CheckRequiredSiegeDoorEntities(self, doorTime)
 		if entity then
 			entity:SetMapEntity()
 		end
-		Shared.Message(string.format("Building timer for %s as no valid triggers provided in map.", self.name))
+		if gDebugClassicEnts then
+			Shared.Message(string.format("Building timer for %s as no valid triggers provided in map.", self.name))
+		end
 	end
 	return false
 end
@@ -131,9 +137,6 @@ function EEMMixin:__initmixin()
 		self.allowedTeam = Clamp(math.floor(self.teamNumber), 0, kSpectatorIndex)
 	end
 	
-	//EEM TeamType?  not doing anything with this ATM.
-	//self.teamType
-	
 	//EEM TriggerAction
 	//self.onTriggerAction - Seems to be used to handle disabling on use - 0 = Toggle, 1 - Always on, 2 - Turn Off.  Default will turn trigger off.
 	//Triggers cant be triggered if off, so toggle is sorta moot.
@@ -144,9 +147,6 @@ function EEMMixin:__initmixin()
 			self.enableOnNotify = true
 		end
 	end
-	
-	//EEM ShowGUI
-	//self.showGUI - Will show optional client side GUI for this object.
 	
 	//EEM Timer Action - Handles how timers reset after triggering.  0 = disables, 1 = reset, 2 = reset also?
 	if self.onTimeAction ~= nil and not self.resetOnTrigger then
@@ -169,28 +169,10 @@ function EEMMixin:__initmixin()
 		BuildPathingEntityFromDirection(self, self.direction)
 	end
 	
-	//EEM Also supports a basic dialogue GUI system...  How these are handled doesnt exact make complete sense to me, they could just be client side ents.
+	//EEM Also supports a basic dialogue GUI system...  How these are handled doesnt exactly make sense to me, they could just be client side.
 	//But we need to work with what is already in play...
 	//Actual TEXT length is networked as 1000 character string, going to try to hack those values in client side.
-	//Hack in .sound for the Client, .text, .characterName and .iconDisplay
-	
-	if self.fadeIn ~= nil then
-		self.guiFadeIn = self.fadeIn
-	end
-	
-	if self.fadeOut ~= nil then
-		self.guiFadeOut = self.fadeOut
-	end
-	
-	if self.repeats ~= nil then
-		self.repeating = self.repeats
-	end
-	
-	//Why have a GUI if it would never be shown?
-	if self.showOnScreen ~= nil then
-		self.showGUIOnScreen = self.showOnScreen
-	end
-	
+		
 	//How long GUI is onscreen
 	if self.displayTime ~= nil then
 		self.showGUITime = self.displayTime
@@ -208,6 +190,19 @@ function EEMMixin:__initmixin()
 	//EEM callFunction - controls what happens when function listener is trigger.
 	if self.callFunction ~= nil then
 		self.functionOperation = self.callFunction
+	end
+	
+	//EEM Texts
+	if self.text ~= nil then
+		self.dialogText = self.text
+	end
+	
+	if self.tooltipText ~= nil then
+		self.dialogText = self.tooltipText
+	end
+	
+	if self.tooltip ~= nil then
+		self.dialogText = self.tooltip
 	end
 	
 	//Translate output1 as the main 'emit channel'.  If output1 etc are used, I should always use them right..?
