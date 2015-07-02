@@ -1,5 +1,7 @@
-// 
-// 
+// Natural Selection 2 'Classic Entities Mod'
+// Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
+// Designed to work with maps developed for Extra Entities Mod.  
+// Source located at - https://github.com/xToken/ClassicEnts
 // lua\ControlledMoveable.lua
 // - Dragon
 
@@ -24,9 +26,9 @@ local kMoveableUpdateRate = 0
 ControlledMoveable.kObjectTypes = enum( {'Door', 'Elevator', 'Gate'} )
 
 //These objects support basic interations/triggering, but not pausing once started.  
-//Doors open then automatically close and can optionally open & close automatically.
-//Elevators pause for a short period at each waypoint before continuing.
-//Gates work just like doors, however they do not open/close automatically.
+//Doors open/close automatically, are enabled/disabled accordingly when triggered.
+//Elevators pause for a short period at each waypoint before continuing.  Triggering an elevator causes it to move.
+//Gates work just like doors, however they do not open/close automatically.  Gates are moved on trigger.
 
 local networkVars = 
 {
