@@ -60,6 +60,7 @@ function DialogListener:OnCreate()
 	if Server then
 		self:RegisterSignalListener(function() TriggerListener(self) end)
 		self.dialogChannel = 0
+		self.teamNumber = 0
 	end
 
 end
@@ -73,11 +74,20 @@ function DialogListener:OnInitialized()
     Entity.OnInitialized(self)
 	
 	if Server then
+	
 		InitMixin(self, EEMMixin)
+		
 		self.dialogChannel = RegisterClientDialogData(self.dialogText)
+		
+		if self.teamNumber == 1 then
+			self:SetIncludeRelevancyMask(kRelevantToTeam1)
+		elseif self.teamNumber == 2 then
+			self:SetIncludeRelevancyMask(kRelevantToTeam2)
+		end
+		
 	end
 	
-	self.showGUITime = self.showGUITime or kDialogDefaultDisplayTime
+	self.dialogTime = self.dialogTime or kDialogDefaultDisplayTime
 
 	//These are created as non-relevant to everything.  Once enabled, they become relevant to Clients
 	if Client then

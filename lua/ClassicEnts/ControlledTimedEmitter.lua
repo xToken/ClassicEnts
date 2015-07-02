@@ -10,7 +10,7 @@ Script.Load("lua/Mixins/SignalListenerMixin.lua")
 Script.Load("lua/ClassicEnts/EEMMixin.lua")
 Script.Load("lua/ClassicEnts/ControlledMixin.lua")
 
-//Triggers on emitChannel after timerDelay seconds.  Reset on GameReset.  resetOnTrigger determines if object is reset automatically on triggering.
+//Triggers on emitChannel after emitTime seconds.  Reset on GameReset.  emitOnce determines if object is reset automatically on triggering.
 //enable will set initial state on map load, and after resets.
 
 class 'ControlledTimedEmitter' (Entity)
@@ -34,10 +34,10 @@ local function UpdateEmitTime(self, deltaTime)
 		if self.totalTime >= self:GetEmitTime() then
 			//Trigger
 			self:EmitSignal(self.emitChannel, self.emitMessage)
-			if self.resetOnTrigger then
-				self.totalTime = 0
-			else
+			if self.emitOnce then
 				self.enabled = false
+			else
+				self.totalTime = 0
 			end
 		end
 		
@@ -86,7 +86,7 @@ function ControlledTimedEmitter:OnSetEnabled(enabled)
 end
 
 function ControlledTimedEmitter:GetEmitTime()
-	return self.timerDelay or kDefaultEmitTime
+	return self.emitTime or kDefaultEmitTime
 end
 
 Shared.LinkClassToMap("ControlledTimedEmitter", ControlledTimedEmitter.kMapName, networkVars)

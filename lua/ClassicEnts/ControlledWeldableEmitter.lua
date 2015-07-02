@@ -17,7 +17,7 @@ Script.Load("lua/ClassicEnts/ScaleModelMixin.lua")
 Script.Load("lua/ClassicEnts/ControlledMixin.lua")
 Script.Load("lua/GameEffectsMixin.lua")
 
-//Uses value from ControlledMixin.  allowedTeam sets the team which can weld this object.
+//Uses value from ControlledMixin.  teamNumber sets the team which can weld this object.
 //timeToWeld controls how many seconds it takes to weld this for it to trigger.  Once trigger, it emits on emitChannel.  This entity can also
 //be toggled on listenChannel.  resetOnTrigger can be used to control what happens after this is welded.
 //allowHealSpray allows aliens to combat welding and/or trigger this again by 'healing' it.
@@ -33,8 +33,7 @@ local kHealSprayTimeSlice = 0.45
 
 local networkVars = 
 {
-	welded = "interpolated float (0 to 1 by 0.01)",
-	allowedTeam = string.format("integer (-1 to %d)", kSpectatorIndex)
+	welded = "interpolated float (0 to 1 by 0.01)"
 }
 
 AddMixinNetworkVars(BaseModelMixin, networkVars)
@@ -84,7 +83,7 @@ function ControlledWeldableEmitter:OnInitialized()
         end
 		
 		InitMixin(self, EEMMixin)
-		self:SetTeamNumber(kTeam1Index)
+		self:SetTeamNumber(kTeam1Index) //self.teamNumber??
 		
 	end
 	
@@ -126,10 +125,6 @@ function ControlledWeldableEmitter:GetWeldTime()
     return self.timeToWeld or kDefaultWeldTime
 end
 
-function ControlledWeldableEmitter:GetAllowedTeam()
-    return self.allowedTeam or 0
-end
-
 /*
 function ControlledWeldableEmitter:OnHealSprayed()
     //Hmmm
@@ -152,7 +147,7 @@ end
 
 function ControlledWeldableEmitter:GetCanBeWeldedOverride(doer)
 	if doer and doer.GetTeamNumber then
-		return self.welded < 1 and (self:GetAllowedTeam() == 0 or doer:GetTeamNumber() == self:GetAllowedTeam()) and self:GetIsEnabled(), true
+		return self.welded < 1 and self:GetIsEnabled(), true
 	end
 	return true, true
 end

@@ -26,9 +26,7 @@ local kDefaultBreakableHealth = 100
 
 local networkVars = 
 {
-	breakableSurface = "enum kBreakableSurfaceEnum",
-	assetIndex = "resource",
-	allowedTeam = string.format("integer (-1 to %d)", kSpectatorIndex)
+	breakableSurface = "enum kBreakableSurfaceEnum"
 }
 
 AddMixinNetworkVars(BaseModelMixin, networkVars)
@@ -52,8 +50,6 @@ function BreakableEmitter:OnCreate()
 	//SignalMixin sets this on init, but I need to confirm its set on ent.
 	self.listenChannel = nil
 	self.breakableSurface = kBreakableSurfaceEnum.metal
-	self.assetIndex = 0
-	self.allowedTeam = 0
 	self:SetUpdates(false)
 	self:SetRelevancyDistance(kMaxRelevancyDistance)
 
@@ -80,11 +76,10 @@ function BreakableEmitter:OnInitialized()
 				//Precache
 				Shared.PrecacheCinematic(self.cinematicName)
 			end
-			self.assetIndex = Shared.GetCinematicIndex(self.cinematicName)
 		end
 	
 		InitMixin(self, EEMMixin)
-		self:SetTeamNumber(2)
+		self:SetTeamNumber(self.teamNumber)
 		
 	end
 	

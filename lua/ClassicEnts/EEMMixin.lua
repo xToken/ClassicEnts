@@ -97,7 +97,7 @@ local function CheckRequiredSiegeDoorEntities(self, doorTime)
 	end
 	if not matching then
 		//Missing trigger, add basic timer
-		local entity = Server.CreateEntity("controlled_timed_emitter", { origin = self:GetOrigin(), emitChannel = self.listenChannel, timerDelay = doorTime, resetOnTrigger = false, name = ToString(self.name .. "_timer"), enabled = true })
+		local entity = Server.CreateEntity("controlled_timed_emitter", { origin = self:GetOrigin(), emitChannel = self.listenChannel, emitTime = doorTime, emitOnce = true, name = ToString(self.name .. "_timer"), enabled = true })
 		if entity then
 			entity:SetMapEntity()
 		end
@@ -149,13 +149,13 @@ function EEMMixin:__initmixin()
 	end
 	
 	//EEM Timer Action - Handles how timers reset after triggering.  0 = disables, 1 = reset, 2 = reset also?
-	if self.onTimeAction ~= nil and not self.resetOnTrigger then
-		self.resetOnTrigger = self.onTimeAction == 1 or self.onTimeAction == 2
+	if self.onTimeAction ~= nil and not self.emitOnce then
+		self.emitOnce = self.onTimeAction == 0
 	end
 	
 	//EEM Timer delay - How long into the round that a timer takes to trigger.
 	if self.waitDelay ~= nil then
-		self.timerDelay = self.waitDelay
+		self.emitTime = self.waitDelay
 	end
 	
 	//EEM MoveSpeed
@@ -175,7 +175,7 @@ function EEMMixin:__initmixin()
 		
 	//How long GUI is onscreen
 	if self.displayTime ~= nil then
-		self.showGUITime = self.displayTime
+		self.dialogTime = self.displayTime
 	end
 	
 	//Might be a siege only property here
