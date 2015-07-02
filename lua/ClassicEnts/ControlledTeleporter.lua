@@ -1,6 +1,8 @@
-// 
-// 
-// lua\ControlledTeleporterTrigger.lua
+// Natural Selection 2 'Classic Entities Mod'
+// Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
+// Designed to work with maps developed for Extra Entities Mod.  
+// Source located at - https://github.com/xToken/ClassicEnts
+// lua\ControlledTeleporter.lua
 // - Dragon
 
 Script.Load("lua/Mixins/SignalListenerMixin.lua")
@@ -8,41 +10,23 @@ Script.Load("lua/Trigger.lua")
 Script.Load("lua/ClassicEnts/EEMMixin.lua")
 Script.Load("lua/ClassicEnts/ControlledMixin.lua")
 
-class 'ControlledTeleporterTrigger' (Trigger)
+class 'ControlledTeleporter' (Trigger)
 
-ControlledTeleporterTrigger.kMapName = "controlled_teleporter_trigger"
+ControlledTeleporter.kMapName = "controlled_teleporter"
 
 local kTeleporterGlobalTable = { }
 local kDefaultCooldown = 1
 
-//Singular Entrance, multiple exits supported.
-local function RegisterInGlobalTable(networkId, entrance, entityId)
-	if kTeleporterGlobalTable[networkId] then
-		//Already registered network, check missing side
-		if entrance then
-			kTeleporterGlobalTable[networkId].entrance = entityId
-		elseif not entrance then
-			if not kTeleporterGlobalTable[networkId].destination then
-				kTeleporterGlobalTable[networkId].destination = { }
-			end
-			table.insert(kTeleporterGlobalTable[networkId].destination, entityId)
-		else
-			assert(false)
-		end
-	else
+local function RegisterInGlobalTable(networkId, entityId)
+	if not kTeleporterGlobalTable[networkId] then
 		kTeleporterGlobalTable[networkId] = { }
-		if entrance then
-			kTeleporterGlobalTable[networkId].entrance = entityId
-		else
-			kTeleporterGlobalTable[networkId].destination = { }
-			table.insert(kTeleporterGlobalTable[networkId].destination, entityId)
-		end
 	end
+	table.insert(kTeleporterGlobalTable[networkId], entityId)
 end
 
 local function LookupDestinationTable(networkId)
 	if kTeleporterGlobalTable[networkId] then
-		return kTeleporterGlobalTable[networkId].destination
+		return kTeleporterGlobalTable[networkId]
 	end
 end
 
@@ -60,7 +44,7 @@ end
 
 local networkVars = { }
 
-function ControlledTeleporterTrigger:OnCreate() 
+function ControlledTeleporter:OnCreate() 
 
     Trigger.OnCreate(self)
 	
@@ -69,7 +53,6 @@ function ControlledTeleporterTrigger:OnCreate()
 	//SignalMixin sets this on init, but I need to confirm its set on ent.
 	self.listenChannel = nil
 	self.exitOnly = false
-	self.entranceOnly = false
 	self.allowedTeam = 0
 	self.timeLastTeleport = 0
 	
@@ -77,7 +60,7 @@ function ControlledTeleporterTrigger:OnCreate()
 	
 end
 
-function ControlledTeleporterTrigger:OnInitialized()
+function ControlledTeleporter:OnInitialized()
 
     Trigger.OnInitialized(self)
 	
@@ -87,62 +70,40 @@ function ControlledTeleporterTrigger:OnInitialized()
 	//vanilla system checks if .teleportDestinationId == .teleportDestinationId then
 	//EEM uses .destination against .name
 	
-	local entrance = true
-	local destination = true
-	local entranceId
-	local destinationId	
-	
 	if self.teleportDestinationId and self.oldMapName == "teleport_destination" then
-		//We are an exit
-		entrance = false
+		//We are an destination, register in global table.
 		self.exitOnly = true
-		destinationId = self.teleportDestinationId
-	elseif self.teleportDestinationId and self.oldMapName == "teleport_trigger" then
-		//We were an entrance
-		destination = false
-		self.entranceOnly = true
-		entranceId = self.teleportDestinationId
+		RegisterInGlobalTable(self.teleportDestinationId, self:GetId())
 	end
 	
 	if not self.teleportDestinationId then
-		//We are an eem teleporter, register new names for teleport network IDs
-		entranceId = LookupOrRegisterExtendedChannelToName(ToString(self.name .. "_teleporter"))
+		//We are an eem teleporter, register new names for teleport network IDs.  All EEM teleporters can be a destination, but not necessarily an entrance.
+		local destinationId = RegisterInGlobalTable(LookupOrRegisterExtendedChannelToName(ToString(self.name .. "_teleporter")), self:GetId())
 		if self.exitonly then
-			//EEM exit only
+			//EEM exit only, we can set teleportDestinationId for consistency with vanilla ents but its never used atm.
 			self.exitOnly = true
-			destinationId = entranceId
-			entrance = false
-		elseif not self.destination then
-            Shared.Message(string.format("Error: ControlledTeleporterTrigger %s has no destination", self.name))
+			self.teleportDestinationId = destinationId
+		elseif self.destination then
+			//If we are not a destination, then register our channel and set it as our destinationId.
+            self.teleportDestinationId = LookupOrRegisterExtendedChannelToName(ToString(self.destination .. "_teleporter"))
 		else
-			destinationId = LookupOrRegisterExtendedChannelToName(ToString(self.destination .. "_teleporter"))
+			Shared.Message(string.format("Error: ControlledTeleporterTrigger %s has no destination", self.name))
 		end
-	end
-	
-	if entrance then
-		RegisterInGlobalTable(entranceId, true, self:GetId())
-	end
-	if destination then
-		RegisterInGlobalTable(destinationId, false, self:GetId())
-	end
-	
-	if not self.exitOnly then
-		self.teleportDestinationId = entranceId
 	end
 	
 	self:SetTriggerCollisionEnabled(true)
 	
 end
 
-function ControlledTeleporterTrigger:GetAllowedTeam()
+function ControlledTeleporter:GetAllowedTeam()
     return self.allowedTeam or 0
 end
 
-function ControlledTeleporterTrigger:GetCooldown()
+function ControlledTeleporter:GetCooldown()
 	return self.timerDelay or kDefaultCooldown
 end
 
-function ControlledTeleporterTrigger:GetIsMapEntity()
+function ControlledTeleporter:GetIsMapEntity()
     return true
 end
 
@@ -160,7 +121,7 @@ local kTeleportClassNames =
     "Exo"
 }
 
-function ControlledTeleporterTrigger:CanTeleportEntity(entity)
+function ControlledTeleporter:CanTeleportEntity(entity)
 	if not self.exitOnly and self:GetIsEnabled() and self.timeLastTeleport + self:GetCooldown() < Shared.GetTime() then
 		local className = entity:GetClassName()
 		if table.contains(kTeleportClassNames, className) then
@@ -172,7 +133,7 @@ function ControlledTeleporterTrigger:CanTeleportEntity(entity)
 	return false
 end
 
-function ControlledTeleporterTrigger:OnTriggerEntered(enterEnt, triggerEnt)
+function ControlledTeleporter:OnTriggerEntered(enterEnt, triggerEnt)
 
     if self:CanTeleportEntity(enterEnt) then
 
@@ -218,4 +179,4 @@ function ControlledTeleporterTrigger:OnTriggerEntered(enterEnt, triggerEnt)
 	
 end
 
-Shared.LinkClassToMap("ControlledTeleporterTrigger", ControlledTeleporterTrigger.kMapName, networkVars)
+Shared.LinkClassToMap("ControlledTeleporter", ControlledTeleporter.kMapName, networkVars)
