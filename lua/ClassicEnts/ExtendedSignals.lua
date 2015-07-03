@@ -41,7 +41,7 @@ function SignalEmitterMixin:EmitSignal(channel, message)
 		local inRange = (listener:GetOrigin() - self:GetOrigin() ):GetLengthSquaredXZ() <= (self.signalRange * self.signalRange)
 		if listener:GetListenChannel() == channel and (listener:GetIsGlobalListener() or self:GetIsGlobalEmitter() or inRange) then
 			if gDebugClassicEnts then
-				Shared.Message(string.format("Signalling %s class for channel %s.", listener:GetClassName(), channel))
+				Shared.Message(string.format("Signalling %s entity %s class for channel %s.", listener:GetId(), listener:GetClassName(), channel))
 			end
 			listener:OnSignal(message)
 		end
