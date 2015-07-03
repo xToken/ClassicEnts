@@ -17,6 +17,23 @@ ControlledMixin.networkVars =
     enabled = "boolean"
 }
 
+local function OnReceiveSignal(self)
+	if self.OverrideListener then
+		self:OverrideListener()
+	else
+		if self.disableOnNotify then
+			//disable
+			self:SetIsEnabled(false)
+		elseif self.enableOnNotify then
+			//enable
+			self:SetIsEnabled(true)	
+		else
+			//Default toggle
+			self:SetIsEnabled(not self.enabled)
+		end
+	end
+end
+
 function ControlledMixin:__initmixin()
 	if self.enabled == nil then
 		self.enabled = true
@@ -25,7 +42,7 @@ function ControlledMixin:__initmixin()
 	self.enableOnNotify = false
 	self.initialSetting = self.enabled
 	
-	self:RegisterSignalListener(function() self:OnReceiveSignal() end)
+	self:RegisterSignalListener(function() OnReceiveSignal(self) end)
 end
 
 function ControlledMixin:GetIsEnabled()
@@ -34,23 +51,6 @@ end
 
 function ControlledMixin:Reset()
 	self.enabled = self.initialSetting
-end
-
-function ControlledMixin:OnReceiveSignal()
-    if self.OverrideListener then
-		self:OverrideListener()
-	else
-		if self.disableOnNotify then
-			//disable
-			self.enabled = false
-		elseif self.enableOnNotify then
-			//enable
-			self.enabled = true		
-		else
-			//Default toggle
-			self.enabled = not self.enabled
-		end
-	end
 end
 
 function ControlledMixin:SetIsEnabled(enabled)
