@@ -5,7 +5,6 @@
 // lua\ClassicEnts_Server.lua
 // - Dragon
 
-Script.Load("lua/ClassicEnts/CheatyThings.lua")
 Script.Load("lua/ClassicEnts/BreakableEmitter.lua")
 Script.Load("lua/ClassicEnts/ControlledButtonEmitter.lua")
 Script.Load("lua/ClassicEnts/ControlledMoveable.lua")

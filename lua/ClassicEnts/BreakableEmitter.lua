@@ -26,7 +26,8 @@ local kDefaultBreakableHealth = 100
 
 local networkVars = 
 {
-	breakableSurface = "enum kBreakableSurfaceEnum"
+	breakableSurface = "enum kBreakableSurfaceEnum",
+	allowedTeam = string.format("integer (-1 to %d)", kSpectatorIndex)
 }
 
 AddMixinNetworkVars(BaseModelMixin, networkVars)
@@ -49,6 +50,7 @@ function BreakableEmitter:OnCreate()
 	
 	//SignalMixin sets this on init, but I need to confirm its set on ent.
 	self.listenChannel = nil
+	self.allowedTeam = 0
 	self.breakableSurface = kBreakableSurfaceEnum.metal
 	self:SetUpdates(false)
 	self:SetRelevancyDistance(kMaxRelevancyDistance)
@@ -79,7 +81,6 @@ function BreakableEmitter:OnInitialized()
 		end
 	
 		InitMixin(self, EEMMixin)
-		self:SetTeamNumber(self.teamNumber)
 		
 	end
 	
@@ -121,6 +122,10 @@ function BreakableEmitter:GetShowHitIndicator()
     return true
 end
 
+function BreakableEmitter:GetAllowedTeam()
+    return self.allowedTeam or 0
+end
+
 function BreakableEmitter:GetSurfaceOverride()
     return EnumToString(kBreakableSurfaceEnum, self.breakableSurface)
 end
@@ -134,6 +139,16 @@ if Server then
 		DestroyEntity(self)
 	end
 	
+end
+
+//Breakables are ALWAYS MY ENEMY!
+local oldGetAreEnemies = GetAreEnemies
+function GetAreEnemies(entityOne, entityTwo)
+	//If target is breakable
+	if entityTwo and entityTwo:isa("BreakableEmitter") and (entityTwo:GetAllowedTeam() == 0 or entityOne and entityOne.GetTeamNumber and entityOne:GetTeamNumber() == entityTwo:GetAllowedTeam()) then
+		return true
+	end
+	return oldGetAreEnemies(entityOne, entityTwo)
 end
 
 Shared.LinkClassToMap("BreakableEmitter", BreakableEmitter.kMapName, networkVars)
