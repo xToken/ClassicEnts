@@ -197,12 +197,9 @@ function EEMMixin:__initmixin()
 		self.dialogText = self.text
 	end
 	
-	if self.tooltipText ~= nil then
-		self.dialogText = self.tooltipText
-	end
-	
 	if self.tooltip ~= nil then
 		self.dialogText = self.tooltip
+		self.localDialog = true
 	end
 	
 	//Translate output1 as the main 'emit channel'.  If output1 etc are used, I should always use them right..?
