@@ -2,29 +2,29 @@
 // Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
 // Designed to work with maps developed for Extra Entities Mod.  
 // Source located at - https://github.com/xToken/ClassicEnts
-// lua\DialogListener.lua
+// lua\ControlledDialogListener.lua
 // - Dragon
 
 Script.Load("lua/Mixins/SignalListenerMixin.lua")
 Script.Load("lua/ClassicEnts/EEMMixin.lua")
+Script.Load("lua/ClassicEnts/ControlledMixin.lua")
 
-class 'DialogListener' (Entity)
+class 'ControlledDialogListener' (Entity)
 
-DialogListener.kMapName = "dialog_listener"
+ControlledDialogListener.kMapName = "controlled_dialog_listener"
 
 local kDialogGUIScript = "ttt"
 local kDialogDefaultDisplayTime = 2
+local kLocalizedDisplayRange = 2
 
 local kClientDialogData = { }
 
 local networkVars = 
 { 
-	// replace m_origin
-    m_origin = "interpolated position (by 1000 [0 0 0], by 1000 [0 0 0], by 1000 [0 0 0])",
-    // replace m_angles
-    m_angles = "interpolated angles (by 10 [0], by 10 [0], by 10 [0])",
 	dialogChannel = "integer"
 }
+
+AddMixinNetworkVars(ControlledMixin, networkVars)
 
 function RegisterClientDialogData(text)
 	table.insert(kClientDialogData, text)
@@ -39,13 +39,7 @@ local function DisableListener(self)
 	self:SetRelevancyDistance(Entity.Propagate_Never)
 end
 
-local function TriggerListener(self)
-	self:SetRelevancyDistance(Math.infinity)
-	self:AddTimedCallback(DisableListener, self.showGUITime)
-	//Add callback to turn off.
-end
-
-function DialogListener:OnCreate() 
+function ControlledDialogListener:OnCreate() 
 
     Entity.OnCreate(self)
 	
@@ -54,24 +48,21 @@ function DialogListener:OnCreate()
 	//SignalMixin sets this on init, but I need to confirm its set on ent.
 	self.listenChannel = nil
 	
-	self:SetUpdates(false)
-	self:SetRelevancyDistance(Entity.Propagate_Never)
-	
 	if Server then
-		self:RegisterSignalListener(function() TriggerListener(self) end)
 		self.dialogChannel = 0
 		self.teamNumber = 0
 	end
-
-end
-
-function DialogListener:Reset()
+	
+	self:SetUpdates(false)
 	self:SetRelevancyDistance(Entity.Propagate_Never)
+
 end
 
-function DialogListener:OnInitialized()
+function ControlledDialogListener:OnInitialized()
 
     Entity.OnInitialized(self)
+	
+	InitMixin(self, ControlledMixin)
 	
 	if Server then
 	
@@ -85,21 +76,50 @@ function DialogListener:OnInitialized()
 			self:SetIncludeRelevancyMask(kRelevantToTeam2)
 		end
 		
+		if self.localDialog then
+			self:SetRelevancyDistance(kLocalizedDisplayRange)
+		end
+		
 	end
 	
 	self.dialogTime = self.dialogTime or kDialogDefaultDisplayTime
 
 	//These are created as non-relevant to everything.  Once enabled, they become relevant to Clients
-	if Client then
+	if Client and self:GetIsEnabled() then
 		//Create GUI or whatever, display dialog
 		//This is cheated into teammessages atm
 		local player = Client.GetLocalPlayer()
-		if player and HasMixin(player, "TeamMessage") then
+		if player and HasMixin(player, "TeamMessage") and RetrieveClientDialogData(self.dialogChannel) then
 			player:SetTeamMessage(RetrieveClientDialogData(self.dialogChannel))
 		end
 		
 	end
 	
+end
+
+function ControlledDialogListener:OverrideListener()
+	if not self.localDialog then
+		self:SetRelevancyDistance(Math.infinity)
+		self:AddTimedCallback(DisableListener, self.dialogTime)
+		//Add callback to turn off.
+	else
+		if self.disableOnNotify then
+			//disable
+			self.enabled = false
+		elseif self.enableOnNotify then
+			//enable
+			self.enabled = true		
+		else
+			//Default toggle
+			self.enabled = not self.enabled
+		end
+	end
+end
+
+function ControlledDialogListener:Reset()
+	if not self.localDialog then
+		self:SetRelevancyDistance(Entity.Propagate_Never)
+	end
 end
 
 if Client then
@@ -111,4 +131,4 @@ if Client then
 	
 end
 
-Shared.LinkClassToMap("DialogListener", DialogListener.kMapName, networkVars)
+Shared.LinkClassToMap("ControlledDialogListener", ControlledDialogListener.kMapName, networkVars)
