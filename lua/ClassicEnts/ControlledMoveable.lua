@@ -280,6 +280,8 @@ function ControlledMoveable:MoveObjectToTarget(physicsGroupMask, endPoint, moves
     
 end
 
+//Note that while this should make the objects move smoothly, players riding on them still will bounce.
+//Would need to move players that are riding to have perfectly smooth experience for them.
 function ControlledMoveable:OnUpdate(deltaTime)
 
     PROFILE("ControlledMoveable:OnUpdate")
