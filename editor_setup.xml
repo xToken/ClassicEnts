@@ -1129,7 +1129,7 @@
         <model>
             <file>model</file>
             <scale>scale</scale>
-            <default_model>models/props/generic/terminals/generic_controlpanel_02.model</default_model>
+            <default_model>models/props/refinery/refinery_tram_car.model</default_model>
         </model>
         <size>
             <scale>scale</scale>
@@ -1139,7 +1139,7 @@
         <parameter name="model" type="file" label="Model" filter="*.model"/>
 		<parameter name="name" label="Name" type="string" help="The name of this Moveable Object - Controls Waypoints." default="ReplaceMe" />
 		<parameter name="speed" type="integer" label="Speed" help="Controls how fast this object moves." default="10" />
-		<parameter name="open" type="boolean" label="Open" help="Controls if this object starts Opened or Closed (Only Doors & Gates)" default="false"/>
+		<parameter name="open" type="boolean" label="Open" help="Controls if this object starts Opened or Closed (Only Doors and Gates)" default="false"/>
 		<parameter name="objectType" type="choice" label="Type of Moveable Object" default="3">
             <choice label="Door" value="1"/>
             <choice label="Elevator" value="2"/>
@@ -1198,7 +1198,7 @@
 		
     </class>
 	
-	<class name="dialog_listener">
+	<class name="controlled_dialog_listener">
 	
 		<parent>signal_listener</parent>
         
@@ -1206,6 +1206,10 @@
             <file>models/system/editor/sound_reverb.model</file>
         </model>
         
+		<parameter name="enabled" type="boolean" label="Enabled" help="If this object starts enabled." default="true"/>
+		<parameter name="disableOnNotify" type="boolean" label="Disable on Notify" help="If true, this object will be disabled on receiving a signal." default="false"/>
+		<parameter name="enableOnNotify" type="boolean" label="Enable on Notify" help="If true, this object will be enabled on receiving a signal." default="false"/>
+		<parameter name="localDialog" type="boolean" label="Local Dialogue" help="Only displayed to players near this object when true.  Uses enable flags from above in this mode." default="false"/>
 		<parameter name="dialogText" type="string" label="Dialogue Text" help="The text displayed to players when triggered." default="Hi!"/>
 		<parameter name="dialogTime" type="integer" label="Dialogue Time" help="How long the dialogue message is displayed." default="2"/>
 		<parameter name="teamNumber" type="choice" label="Team Number" default="0">
@@ -1237,6 +1241,95 @@
         <parameter name="moveableName" type="string" label="Moveable Name" help="The name of the moveable object which uses these points." default="ReplaceMe" />
 		<parameter name="number" type="integer" label="Number" help="The number this waypoint is in the chain." default="1"/>
         
+    </class>
+	
+	<!-- Stuff made by Feha -->
+	
+	<!-- Water -->
+    <class name="water" placeable="true">
+		
+		<model>
+            <file>model</file>
+            <scale>scale</scale>
+			<default_model>models/water/water_model.model</default_model>
+        </model>
+		
+        <size>
+            <scale>scale</scale>
+        </size>
+        <parameter name="name"								type="string"						label="Name of water entity"				default=""																		help="Name of water which can be referenced by other entities" />
+        <parameter name="scale"								type="vector"						label="Scale"								default="1.0, 1.0, 1.0"															help="Scale of the model"/>
+		<parameter name="model"								type="file"		filter="*.model"	label="Model Path"							default=""																		help="Path to model for entity, leave empty for the default blank model"/>
+        <parameter name="modelsize"							type="vector"						label="Model size"							default="0.4712, 0.4712, 0.4712"												help="The size (in meters) of the model at a scale of 1,1,1. You can see it in lower right corner if you select it with the scale-tool"/>
+        <parameter name="material"							type="file"							label="Material path"						default="models/water/images/0_descent_watertreatment_tank_water_02.material"	help="Path to material for entity" />
+		<parameter name="material2"							type="file"							label="(Optional) Second Material Path"		default=""																		help="Adding a second material works, but it will have interference with original material. This is for users who want to play around the with material interference" />
+		<parameter name="suffocation"						type="boolean"						label="Suffocation on?"						default="true"																	help="When true, the water can suffocate players." />
+		<parameter name="suffocationvolume"					type="real"							label="Suffocation Sound Volume"			default="2"																		help="Volume of the suffocation sound"/>
+		<parameter name="map_suffocationsound"				type="file"		filter="sound"		label="Suffocation Sound Path"				default="sound/NS2.fev/alien/gorge/spit_hit_marine"								help="Path to sound for when suffocation" />
+		<parameter name="splashscale"						type="vector"						label="Splash Cinematic Scale"				default="2.0, 1.0, 2.0"															help="Sets the scale of the splash cinematic"/>
+        <parameter name="map_splashcinematics"				type="file"							label="Splash Cinematic Path"				default="cinematics/water/splash1.cinematic"									help="Path to cinematic for when something enters water" />
+		<parameter name="splashvolume"						type="real"							label="Splash volume"						default="1"																		help="Volume of the splash sound"/>
+        <parameter name="map_splashsound"					type="file"		filter="sound"		label="Splash Sound Path"					default="sound/water_sounds/water/footstep_splash"								help="Path to sound for when something enters water" />
+		<parameter name="footstepscale"						type="vector"						label="Footstep Splash Cinematic Scale"		default="2.0, 1.0, 2.0"															help="Scale of the splash cinematic when footsteps make a splash"/>
+        <parameter name="map_footstepcinematics"			type="file"							label="Footstep Splash Cinematic Path"		default="cinematics/water/splash1.cinematic"									help="Path to the splash cinematic when footsteps make a splash" />
+		<parameter name="footstepvolume"					type="real"							label="Footstep Sound Volume"				default="3"																		help="Volume of the footstep sound"/>
+        <parameter name="map_footstepsound"					type="file"		filter="sound"		label="Footstep Splash Sound Path"			default="sound/water_sounds/water/wade"											help="Path to sound for when player's footsteps make a splash" />
+		<parameter name="map_underwaterfiltercinematics"	type="file"							label="Underwater Filter Cinematic Path"	default="cinematics/water/water_filter.cinematic"								help="Path to the cinematic used to filter player's screen when underwater" />
+		<parameter name="underwatervolume"					type="real"							label="Underwater Ambience Volume"			default="3"																		help="Volume of the underwater ambience sound"/>
+        <parameter name="map_underwatersound"				type="file"		filter="sound"		label="Underwater Ambience Sound Path"		default="sound/NS2.fev/ambient/underwater ambience"								help="Path to the ambient sound player's hear while underwater" />
+		
+    </class>
+	
+	<class name="water_spout" placeable="true">
+		
+		<model>
+            <file>models/system/editor/cinematic.model</file>
+        </model>
+		
+        <parameter name="name" type="string" label="Name" default="" help="Name of trigger which can be referenced by other entities" />
+        <parameter name="cinematicsscale" type="vector" label="Cinematic Scale" default="1.0, 1.0, 1.0" help="Scale of the cinematic scale that plays when turned on by the valve"/>
+        <parameter name="map_cinematics" type="file" label="Cinematic Path" default="cinematics/environment/waterfall_large.cinematic" help="Path to the cinematic that plays when turned on by the valve"/>
+		<parameter name="map_sound" type="file" label="Water Flowing Sound Path" default="sound/NS2.fev/alien/gorge/spit_hit_marine" help="Path to sound for when the water is flowing/on" />
+		<parameter name="volume" type="real" label="Volume" default="1" help="Volume of the sound"/>		
+
+    </class>
+	
+	<class name="water_valve" placeable="true">
+        
+        <parent>signal_emitter</parent>
+		
+        <model>
+            <file>model</file>
+            <scale>scale</scale>
+            <default_model>models/props/refinery/refinery_bigpipes_03_str4_valve.model</default_model>
+        </model>
+
+        <size>
+            <scale>scale</scale>
+        </size>
+
+        <pathing>
+            <include>pathInclude</include>
+            <walkable>pathWalkable</walkable>
+            <file>model</file>
+        </pathing>
+        
+        <parameter name="scale" type="vector" label="Scale" default="1.0, 1.0, 1.0"/>
+        <parameter name="model" type="file" label="Model" filter="*.model" default="models/props/refinery/refinery_bigpipes_03_str4_valve.model"/>
+        <parameter name="commAlpha" type="real" label="Commander Alpha" help="0-1. Doesn't collide if less than 1." default="1.0"/>
+        <parameter name="pathInclude" type="boolean" label="Pathing Include" help="On will include in NavMesh. Off excludes prop from nav mesh" default="false"/>
+        <parameter name="pathWalkable" type="boolean" label="Pathing Walkable" help="On will be walkable in NavMesh. Off makes prop not walkable in nav mesh" default="true"/>
+		<parameter name="collidable" type="boolean" label="Collidable" help="The prop can be collided with" default="true"/>
+        
+        <parameter name="nameOfConnectedSpout" type="string" label="Connected Spout Name" default="" help="Name of the spout connected to this valve" />
+        <parameter name="nameOfConnectedWater" type="string" label="Connected Water Name" default="" help="Name of the water connected to this valve" />
+        <parameter name="waterscale" type="vector" label="Water Scale" default="1.0, 0.0, 1.0" help="The scale the water changes to when valve is used"/>
+        <parameter name="timeToScale" type="real" label="Time to scale" default="5" help="How fast it changes the scale of the water" />
+		<parameter name="newangles" type="vector" label="Valve Turn Amount" default="0.0, 0.0, 0.0" help="The angle the valve changes to when valve is used"/>
+        <parameter name="timeToTurn" type="real" label="Valve turn time" default="5" help="How fast the valve turns" />
+		<parameter name="coolDownTime" type="real" label="Cooldown time" help="The amount of seconds to wait after the valve is turned until it can be turned again. Needs to be greater than 0 or it may turn the valve on and off before user can let go of use key" default="1" />
+        <parameter name="defaultWaterOn" type="boolean" label="Default on?" default="true"/>
+		
     </class>
 	
 
