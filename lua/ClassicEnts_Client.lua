@@ -10,19 +10,19 @@ Script.Load("lua/ClassicEnts/BreakableEmitter.lua")
 Script.Load("lua/ClassicEnts/ControlledButtonEmitter.lua")
 Script.Load("lua/ClassicEnts/ControlledMoveable.lua")
 Script.Load("lua/ClassicEnts/ControlledWeldableEmitter.lua")
-Script.Load("lua/ClassicEnts/DialogListener.lua")
+Script.Load("lua/ClassicEnts/ControlledDialogListener.lua")
 
 local kInterceptClasses = 
 {
 	"logic_dialogue",
 	"logic_worldtooltip",
-	"dialog_listener"
+	"controlled_dialog_listener"
 }
 
 local oldLoadMapEntity = LoadMapEntity
 function LoadMapEntity(className, groupName, values)
 	if table.contains(kInterceptClasses, className) then
-		local dialog = values[dialogText]
+		local dialog = values["dialogText"]
 		if className == "logic_dialogue" then
 			dialog = values["text"]
 		elseif className == "logic_worldtooltip" then

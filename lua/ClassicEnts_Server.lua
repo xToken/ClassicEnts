@@ -12,7 +12,7 @@ Script.Load("lua/ClassicEnts/ControlledMoveable.lua")
 Script.Load("lua/ClassicEnts/ControlledTeleporter.lua")
 Script.Load("lua/ClassicEnts/ControlledTimedEmitter.lua")
 Script.Load("lua/ClassicEnts/ControlledWeldableEmitter.lua")
-Script.Load("lua/ClassicEnts/DialogListener.lua")
+Script.Load("lua/ClassicEnts/ControlledDialogListener.lua")
 Script.Load("lua/ClassicEnts/EmitterMultiplier.lua")
 Script.Load("lua/ClassicEnts/ExtendedSignals.lua")
 Script.Load("lua/ClassicEnts/FunctionListener.lua")
@@ -36,8 +36,8 @@ local kMapNameTranslationTable =
 	["logic_listener"] = "emitter_multiplier",
 	["logic_weldable"] = "controlled_weldable_emitter",
 	["logic_timer"] = "controlled_timed_emitter",
-	["logic_dialogue"] = "dialog_listener",
-	["logic_worldtooltip"] = "dialog_listener",
+	["logic_dialogue"] = "controlled_dialog_listener",
+	["logic_worldtooltip"] = "controlled_dialog_listener",
 	["logic_function"] = "function_listener",
 	["teleport_trigger"] = "controlled_teleporter",
 	["teleport_destination"] = "controlled_teleporter",
