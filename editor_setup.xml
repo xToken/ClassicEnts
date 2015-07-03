@@ -1084,10 +1084,10 @@
 		<parameter name="health" type="real" label="Health before dying" default="1.0"/>
 		<parameter name="emitChannel" type="integer" label="Emit channel" help="Only entities listening on this channel will receive the message." default="0"/>
         <parameter name="emitMessage" type="string" label="Emit message" help="The listening entity must respond to this message." default="" />
-        <parameter name="teamNumber" type="choice" label="Team Number" default="2">
-            <choice label="World" value="0"/>
-            <choice label="Marine" value="1"/>
-            <choice label="Alien" value="2"/>
+        <parameter name="allowedTeam" type="choice" label="Team which can break this." default="0">
+            <choice label="Any Team" value="0"/>
+            <choice label="Marines" value="1"/>
+            <choice label="Aliens" value="2"/>
         </parameter>
 		
     </class>
