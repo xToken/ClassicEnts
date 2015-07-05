@@ -245,6 +245,12 @@ function EEMMixin:__initmixin()
 			self.enabled = false
 			self.initialSetting = false
 		end
+		//EEM Default door models
+		if self.clean then
+			self.model = ControlledMoveable.kDefaultDoorClean
+		else
+			self.model = ControlledMoveable.kDefaultDoor
+		end
 	end
 	
 	//EEM StartsOpened - this makes little sense logically, only ref checks if object is also not a door..  In good design this should really never exist.
