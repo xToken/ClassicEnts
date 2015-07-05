@@ -37,6 +37,7 @@ end
 
 local function DisableListener(self)
 	self:SetRelevancyDistance(Entity.Propagate_Never)
+	self.enabled = false
 end
 
 function ControlledDialogListener:OnCreate() 
@@ -101,6 +102,7 @@ function ControlledDialogListener:OverrideListener()
 	if not self.localDialog then
 		self:SetRelevancyDistance(Math.infinity)
 		self:AddTimedCallback(DisableListener, self.dialogTime)
+		self.enabled = true
 		//Add callback to turn off.
 	else
 		if self.disableOnNotify then
