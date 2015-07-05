@@ -17,11 +17,11 @@ class 'ControlledMoveable' (ScriptActor)
 
 ControlledMoveable.kMapName = "controlled_moveable"
 
-local kModelName = "models/misc/door/door.model"
-local kModelNameClean = "models/misc/door/door_clean.model"
+ControlledMoveable.kDefaultDoor = "models/misc/door/door.model"
+ControlledMoveable.kDefaultDoorClean = "models/misc/door/door_clean.model"
+
 local kDoorAnimationGraph = PrecacheAsset("models/misc/door/door.animation_graph")
 local kUpdateAutoOpenRate = 0.3
-local kElevatorPauseTime = 3
 local kMoveableUpdateRate = 0
 ControlledMoveable.kObjectTypes = enum( {'Door', 'Elevator', 'Gate'} )
 
@@ -70,9 +70,9 @@ local function UpdateAutoOpen(self, timePassed)
             
         end
         
-        if desiredOpenState and not self:GetIsMoving() then
+        if desiredOpenState and not self:GetIsMoving() and not self:GetIsOpen() then
 			self:MoveToWaypoint()
-        elseif not desiredOpenState then
+        elseif not desiredOpenState and self:GetIsOpen() then
 			self:MoveToWaypoint(-1)
         end
         
@@ -114,12 +114,10 @@ function ControlledMoveable:OnInitialized()
 	
 		local animGraph
 		if not self.model then
-			if self.clean then
-				self.model = kModelNameClean
-				animGraph = kDoorAnimationGraph
-				self.animated = true
-			else
-				self.model = kModelName
+			Shared.Message(string.format("No model provided for moveable %s.", self.name))
+		else
+			//Check for the two default models
+			if self.model == kModelName or self.model == kModelNameClean then
 				animGraph = kDoorAnimationGraph
 				self.animated = true
 			end
@@ -128,10 +126,11 @@ function ControlledMoveable:OnInitialized()
 		self.modelName = self.model
         
         if self.modelName ~= nil then
-        
-            Shared.PrecacheModel(self.modelName)
-            self:SetModel(self.modelName, animGraph)
-            
+			//These can get re-created midgame, check for precached model
+			if Shared.GetModelIndex(self.modelName) == 0 and GetFileExists(self.modelName) then
+				Shared.PrecacheModel(self.modelName)
+			end
+            self:SetModel(self.modelName)
         end
 		
 		InitMixin(self, EEMMixin)
@@ -159,39 +158,36 @@ end
 
 function ControlledMoveable:MoveToWaypoint(number)
 
-	if self.animated then
-		if self:GetIsEnabled() then
-			self.open = number ~= -1
+	if self:GetIsEnabled() then
+		self.open = number ~= -1
+	end
+	local waypoints = LookupPathingWaypoints(self.name)
+	if waypoints then
+		number = number or (self.waypoint + 1)
+		local target = waypoints[1]
+		for i = 1, #waypoints do
+			if waypoints[i] and waypoints[i].number >= number then
+				target = waypoints[i]
+				break
+			end
+		end
+		if target and self.waypoint ~= target.number then
+			//We are go
+			if gDebugClassicEnts then
+				Shared.Message(string.format("Moveable %s moving from waypoint %s at %s to waypoint %s at %s.", self.name, self.waypoint, ToString(self:GetOrigin()), target.number, ToString(target.origin)))
+			end
+			self.waypoint = target.number
+			self.destination = target.origin
+			self.moving = true
+			self.lastUpdated = Shared.GetTime()
+			//Invalidate any current movements
+			if self.cursor then
+				self.cursor = nil
+				self.points = nil
+			end
 		end
 	else
-		local waypoints = LookupPathingWaypoints(self.name)
-		if waypoints then
-			number = number or (self.waypoint + 1)
-			local target = waypoints[1]
-			for i = 1, #waypoints do
-				if waypoints[i] and waypoints[i].number >= number then
-					target = waypoints[i]
-					break
-				end
-			end
-			if target and self.waypoint ~= target.number then
-				//We are go
-				if gDebugClassicEnts then
-					Shared.Message(string.format("Moveable %s moving from waypoint %s at %s to waypoint %s at %s.", self.name, self.waypoint, ToString(self:GetOrigin()), target.number, ToString(target.origin)))
-				end
-				self.waypoint = target.number
-				self.destination = target.origin
-				self.moving = true
-				self.lastUpdated = Shared.GetTime()
-				//Invalidate any current movements
-				if self.cursor then
-					self.cursor = nil
-					self.points = nil
-				end
-			end
-		else
-			Shared.Message(string.format("Moveable %s with invalid waypoints.", self.name))
-		end
+		Shared.Message(string.format("Moveable %s with invalid waypoints.", self.name))
 	end
 	
 end
@@ -209,6 +205,10 @@ end
 
 function ControlledMoveable:GetSpeed()
     return self.speed
+end
+
+function ControlledMoveable:GetIsOpen()
+    return self.open
 end
 
 function ControlledMoveable:GetControllerSize()
