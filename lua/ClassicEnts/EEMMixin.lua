@@ -166,7 +166,7 @@ function EEMMixin:__initmixin()
 	//EEM Direction - numerical translation to how moveable objects.. move.  0 = up, 1-= down, 2 = east, 3 = west (I THINK), 4 = Use waypoints
 	//Realistically this is kinda sloppy, everything should just use waypoints for greater control, but need to support what exists
 	if self.direction ~= nil then
-		BuildPathingEntityFromDirection(self, self.direction)
+		self:AddTimedCallback(function(self) BuildPathingEntityFromDirection(self, self.direction) end, 1)
 	end
 	
 	//EEM Also supports a basic dialogue GUI system...  How these are handled doesnt exactly make sense to me, they could just be client side.
