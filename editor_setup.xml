@@ -1137,6 +1137,9 @@
 		
         <parameter name="scale" type="vector" label="Scale" default="1.0, 1.0, 1.0"/>
         <parameter name="model" type="file" label="Model" filter="*.model"/>
+		<parameter name="enabled" type="boolean" label="Enabled" help="If this object starts enabled.  Only used by Doors for automatic open/close" default="true"/>
+		<parameter name="disableOnNotify" type="boolean" label="Disable on Notify" help="If true, this object will be disabled on receiving a signal.  Only used by Doors for automatic open/close" default="false"/>
+		<parameter name="enableOnNotify" type="boolean" label="Enable on Notify" help="If true, this object will be enabled on receiving a signal.  Only used by Doors for automatic open/close" default="false"/>
 		<parameter name="name" label="Name" type="string" help="The name of this Moveable Object - Controls Waypoints." default="ReplaceMe" />
 		<parameter name="speed" type="integer" label="Speed" help="Controls how fast this object moves." default="10" />
 		<parameter name="open" type="boolean" label="Open" help="Controls if this object starts Opened or Closed (Only Doors and Gates)" default="false"/>
