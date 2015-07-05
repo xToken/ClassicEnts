@@ -101,6 +101,8 @@ function ControlledMoveable:OnCreate()
 	self.open = false
 	self.animated = false
 	self.lastUpdated = Shared.GetTime()
+	self.registeredPlayers = { }
+	self.lastUpdate = 0
 	
 end
 
@@ -111,6 +113,8 @@ function ControlledMoveable:OnInitialized()
 	InitMixin(self, ControlledMixin)
 	
 	if Server then
+	
+		InitMixin(self, EEMMixin)
 	
 		local animGraph
 		if not self.model then
@@ -132,8 +136,6 @@ function ControlledMoveable:OnInitialized()
 			end
             self:SetModel(self.modelName)
         end
-		
-		InitMixin(self, EEMMixin)
 			
 		if self.objectType == ControlledMoveable.kObjectTypes.Door then
 			self:AddTimedCallback(UpdateAutoOpen, kUpdateAutoOpenRate)
@@ -179,7 +181,7 @@ function ControlledMoveable:MoveToWaypoint(number)
 			self.waypoint = target.number
 			self.destination = target.origin
 			self.moving = true
-			self.lastUpdated = Shared.GetTime()
+			self.lastUpdate = Shared.GetTime()
 			//Invalidate any current movements
 			if self.cursor then
 				self.cursor = nil
@@ -196,6 +198,7 @@ function ControlledMoveable:Reset()
 	if self.waypoint ~= -1 then
 		self:MoveToWaypoint(-1)
 	end
+	self.registeredPlayers = { }
 	self.open = self.initialOpenState
 end
 
@@ -217,6 +220,20 @@ end
 
 function ControlledMoveable:GetCanBeUsed(player, useSuccessTable)
     useSuccessTable.useSuccess = false
+end
+
+function ControlledMoveable:RegisterRidingPlayer(playerId)
+    table.insertunique(self.registeredPlayers, playerId)
+end
+
+function ControlledMoveable:OnCapsuleTraceHit(entity)
+
+    PROFILE("ControlledMoveable:OnCapsuleTraceHit")
+
+    if entity and entity:isa("Player") and HasMixin(entity, "GroundMove") then
+		self:RegisterRidingPlayer(entity:GetId())
+    end
+    
 end
 
 function ControlledMoveable:CheckObjectTarget(endPoint)
@@ -280,20 +297,40 @@ function ControlledMoveable:MoveObjectToTarget(physicsGroupMask, endPoint, moves
     
 end
 
+/*function ControlledMoveable:OnUpdatePlayers(moved)
+	local ReRegisteredPlayers = { }
+	for i = 1, #self.registeredPlayers do
+		if self.registeredPlayers[i] then
+			local player = Shared.GetEntity(self.registeredPlayers[i])
+			if player and self:GetIsPointInside(player:GetOrigin()) then
+				local oldOrigin = player:GetOrigin()
+				Shared.Message("Test moving player")
+				player:SetOrigin(oldOrigin + moved)
+				player.onGround = true
+				table.insert(ReRegisteredPlayers, self.registeredPlayers[i])
+			end
+		end
+	end
+	self.registeredPlayers = ReRegisteredPlayers
+end*/
+
 //Note that while this should make the objects move smoothly, players riding on them still will bounce.
 //Would need to move players that are riding to have perfectly smooth experience for them.
 function ControlledMoveable:OnUpdate(deltaTime)
 
     PROFILE("ControlledMoveable:OnUpdate")
-	self:OnUpdateMoveable(deltaTime)
+	ScriptActor.OnUpdate(self, deltaTime)
+	self:OnUpdateMoveable()
 	
 end
 
-function ControlledMoveable:OnUpdateMoveable(deltaTime)
+function ControlledMoveable:OnUpdateMoveable()
 
     PROFILE("ControlledMoveable:OnUpdateMoveable")
 	if self:GetIsMoving() then
-		self:MoveObjectToTarget(PhysicsMask.All, self.destination, self:GetSpeed(), deltaTime)
+		local dT = Shared.GetTime() - self.lastUpdate
+		self:MoveObjectToTarget(PhysicsMask.All, self.destination, self:GetSpeed(), dT)
+		self.lastUpdate = Shared.GetTime()
 	end
 
 end
