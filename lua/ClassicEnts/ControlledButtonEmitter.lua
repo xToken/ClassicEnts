@@ -72,10 +72,11 @@ function ControlledButtonEmitter:OnInitialized()
 		self.modelName = self.model
         
         if self.modelName ~= nil then
-        
-            Shared.PrecacheModel(self.modelName)
+			//These can get re-created midgame, check for precached model
+			if Shared.GetModelIndex(self.modelName) == 0 and GetFileExists(self.modelName) then
+				Shared.PrecacheModel(self.modelName)
+			end
             self:SetModel(self.modelName)
-            
         end
 	
 		InitMixin(self, EEMMixin)

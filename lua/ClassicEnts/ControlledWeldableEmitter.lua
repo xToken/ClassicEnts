@@ -76,7 +76,7 @@ function ControlledWeldableEmitter:OnInitialized()
         
         if self.modelName ~= nil then
 			//These can get re-created midgame, check for precached model
-			if Shared.GetModelIndex(self.modelName) == 0 then
+			if Shared.GetModelIndex(self.modelName) == 0 and GetFileExists(self.modelName) then
 				Shared.PrecacheModel(self.modelName)
 			end
             self:SetModel(self.modelName)
