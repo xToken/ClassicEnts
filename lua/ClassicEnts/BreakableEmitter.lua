@@ -2,16 +2,17 @@
 // Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
 // Designed to work with maps developed for Extra Entities Mod.  
 // Source located at - https://github.com/xToken/ClassicEnts
-// lua\BreakableEmitter.lua
+// lua\ClassicEnts\BreakableEmitter.lua
 // - Dragon
 
 Script.Load("lua/ScriptActor.lua")
-Script.Load("lua/Mixins/SignalEmitterMixin.lua")
-Script.Load("lua/ClassicEnts/EEMMixin.lua")
-Script.Load("lua/ClassicEnts/ScaleModelMixin.lua")
+Script.Load("lua/ObstacleMixin.lua")
 Script.Load("lua/LiveMixin.lua")
 Script.Load("lua/TeamMixin.lua")
 Script.Load("lua/GameEffectsMixin.lua")
+Script.Load("lua/Mixins/SignalEmitterMixin.lua")
+Script.Load("lua/ClassicEnts/EEMMixin.lua")
+Script.Load("lua/ClassicEnts/ScaleModelMixin.lua")
 
 //Destroyable entities which are re-created on game reset, can emit on channel when destroyed.
 //Takes health, surface, emitChannel, allowedTeam.  Optionally a cinematicName for onKill
@@ -34,8 +35,9 @@ AddMixinNetworkVars(BaseModelMixin, networkVars)
 AddMixinNetworkVars(ClientModelMixin, networkVars)
 AddMixinNetworkVars(LiveMixin, networkVars)
 AddMixinNetworkVars(TeamMixin, networkVars)
-AddMixinNetworkVars(ScaleModelMixin, networkVars)
+AddMixinNetworkVars(ObstacleMixin, networkVars)
 AddMixinNetworkVars(GameEffectsMixin, networkVars)
+AddMixinNetworkVars(ScaleModelMixin, networkVars)
 
 function BreakableEmitter:OnCreate() 
 
@@ -47,6 +49,7 @@ function BreakableEmitter:OnCreate()
 	InitMixin(self, LiveMixin)
     InitMixin(self, TeamMixin)
     InitMixin(self, GameEffectsMixin)
+	InitMixin(self, ObstacleMixin)
 	
 	//SignalMixin sets this on init, but I need to confirm its set on ent.
 	self.listenChannel = nil
@@ -82,6 +85,8 @@ function BreakableEmitter:OnInitialized()
 	
 		InitMixin(self, EEMMixin)
 		
+		self:AddTimedCallback(function(self) self:UpdatePathingMesh() end, 1)
+		
 	end
 	
 	if self.surface then
@@ -99,6 +104,45 @@ function BreakableEmitter:OnInitialized()
 	
 end
 
+function BreakableEmitter:UpdatePathingMesh()
+
+    if GetIsPathingMeshInitialized() and Server then
+   
+        if self.obstacleId ~= -1 then
+            Pathing.RemoveObstacle(self.obstacleId)
+            gAllObstacles[self] = nil
+        end
+		
+		local extents = Vector(1, 1, 1)
+		if self.modelName then
+			_, extents = Shared.GetModel(Shared.GetModelIndex(self.modelName)):GetExtents(self.boneCoords)  
+		end
+		
+		//This gets really hacky.. some models are setup much differently.. their origin is not center mass.
+		//Limit maximum amount of adjustment to try to correct ones that are messed up, but not break ones that are good.
+        local radius = extents.x * self.scale.x
+		local position = self:GetOrigin() + Vector(0, -100, 0)
+		local yaw = self:GetAngles().yaw
+		position.x = position.x + (math.cos(yaw) * radius / 2)
+		position.z = position.z - (math.sin(yaw) * radius / 2)
+		radius = math.min(radius, 2)		
+		local height = 1000.0
+		
+        self.obstacleId = Pathing.AddObstacle(position, radius, height) 
+      
+        if self.obstacleId ~= -1 then
+        
+            gAllObstacles[self] = true
+            if self.GetResetsPathing and self:GetResetsPathing() then
+                InformEntitiesInRange(self, 25)
+            end
+            
+        end
+    
+    end
+    
+end
+
 function BreakableEmitter:Reset()
 	//These should get re-created regardless now.
 end
@@ -113,6 +157,10 @@ end
 
 function BreakableEmitter:GetCanTakeDamageOverride()
     return true
+end
+
+function BreakableEmitter:GetCanBeHealed()
+    return false
 end
 
 function BreakableEmitter:OnTakeDamage(damage, attacker, doer, point)
