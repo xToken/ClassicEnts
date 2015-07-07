@@ -5,8 +5,4 @@
 // lua\ClassicEnts_Predict.lua
 // - Dragon
 
-Script.Load("lua/ClassicEnts/BreakableEmitter.lua")
-Script.Load("lua/ClassicEnts/ControlledButtonEmitter.lua")
-Script.Load("lua/ClassicEnts/ControlledMoveable.lua")
-Script.Load("lua/ClassicEnts/ControlledWeldableEmitter.lua")
-Script.Load("lua/ClassicEnts/ControlledDialogListener.lua")
+Script.Load("lua/ClassicEnts_Shared.lua")

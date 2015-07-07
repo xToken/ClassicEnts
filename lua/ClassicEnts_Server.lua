@@ -5,13 +5,9 @@
 // lua\ClassicEnts_Server.lua
 // - Dragon
 
-Script.Load("lua/ClassicEnts/BreakableEmitter.lua")
-Script.Load("lua/ClassicEnts/ControlledButtonEmitter.lua")
-Script.Load("lua/ClassicEnts/ControlledMoveable.lua")
+Script.Load("lua/ClassicEnts_Shared.lua")
 Script.Load("lua/ClassicEnts/ControlledTeleporter.lua")
 Script.Load("lua/ClassicEnts/ControlledTimedEmitter.lua")
-Script.Load("lua/ClassicEnts/ControlledWeldableEmitter.lua")
-Script.Load("lua/ClassicEnts/ControlledDialogListener.lua")
 Script.Load("lua/ClassicEnts/EmitterMultiplier.lua")
 Script.Load("lua/ClassicEnts/ExtendedSignals.lua")
 Script.Load("lua/ClassicEnts/FunctionListener.lua")
