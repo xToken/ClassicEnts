@@ -13,6 +13,8 @@ Script.Load("lua/ClassicEnts/EEMMixin.lua")
 Script.Load("lua/LiveMixin.lua")
 Script.Load("lua/TeamMixin.lua")
 Script.Load("lua/WeldableMixin.lua")
+Script.Load("lua/MapBlipMixin.lua")
+Script.Load("lua/UnitStatusMixin.lua")
 Script.Load("lua/ClassicEnts/ScaleModelMixin.lua")
 Script.Load("lua/ClassicEnts/ControlledMixin.lua")
 Script.Load("lua/GameEffectsMixin.lua")
@@ -82,9 +84,16 @@ function ControlledWeldableEmitter:OnInitialized()
             self:SetModel(self.modelName)
         end
 		
+		// This Mixin must be inited inside this OnInitialized() function.
+        if not HasMixin(self, "MapBlip") then
+            InitMixin(self, MapBlipMixin)
+        end
+		
 		InitMixin(self, EEMMixin)
 		self:SetTeamNumber(self.teamNumber)
 		
+	elseif Client then
+        InitMixin(self, UnitStatusMixin)
 	end
 	
 	InitMixin(self, WeldableMixin)
@@ -110,6 +119,10 @@ end
 
 function ControlledWeldableEmitter:GetCanBeUsed(player, useSuccessTable)
     useSuccessTable.useSuccess = false
+end
+
+function ControlledWeldableEmitter:GetUnitNameOverride(viewer)
+    return "Weldable"
 end
 
 function ControlledWeldableEmitter:Reset()

@@ -5,11 +5,8 @@
 // lua\ClassicEnts_Client.lua
 // - Dragon
 
-Script.Load("lua/ClassicEnts/BreakableEmitter.lua")
-Script.Load("lua/ClassicEnts/ControlledButtonEmitter.lua")
-Script.Load("lua/ClassicEnts/ControlledMoveable.lua")
-Script.Load("lua/ClassicEnts/ControlledWeldableEmitter.lua")
-Script.Load("lua/ClassicEnts/ControlledDialogListener.lua")
+Script.Load("lua/ClassicEnts_Shared.lua")
+Script.Load("lua/ClassicEnts/GUIHooks.lua")
 
 local kInterceptClasses = 
 {
@@ -35,4 +32,21 @@ function LoadMapEntity(className, groupName, values)
 	else
 		oldLoadMapEntity(className, groupName, values)
 	end
+end
+
+local function SetupGUIMinimap()
+	local kBlipInfo 		= GHook:GetUpValue( GUIMinimap.Initialize,   "kBlipInfo" )
+	local kBlipColorType 	= GHook:GetUpValue( GUIMinimap.Initialize,   "kBlipColorType" )
+	local kBlipSizeType 	= GHook:GetUpValue( GUIMinimap.Initialize,   "kBlipSizeType" )
+	local kStaticBlipsLayer = GHook:GetUpValue( GUIMinimap.Initialize,   "kStaticBlipsLayer" )
+	kBlipInfo[kMinimapBlipType.ControlledWeldableEmitter] = { kBlipColorType.Waypoint, kBlipSizeType.UnpoweredPowerPoint, kStaticBlipsLayer }
+end
+
+GHook:AddPreInitOverride("GUIMinimapFrame", SetupGUIMinimap)
+
+local oldBuildClassToGrid = BuildClassToGrid
+function BuildClassToGrid()
+	local ClassToGrid = oldBuildClassToGrid()
+	ClassToGrid["ControlledWeldableEmitter"] = { 1, 1 }
+	return ClassToGrid
 end
