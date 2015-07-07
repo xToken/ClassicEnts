@@ -40,7 +40,7 @@ local function UpdatePathingWaypointTable(self)
 	if self.moveableName then
 		local waypointFor = self.moveableName
 		local waypointName = self.name or self:GetId()
-		local waypointSequenceNum = self.number or 1
+		local waypointSequenceNum = math.max(self.number or 1, 1)
 		local origin = self:GetOrigin()
 		UpdatePathingTable(waypointFor, waypointName, origin, waypointSequenceNum, self:GetId())
 	else
