@@ -1137,6 +1137,7 @@
 		
         <parameter name="scale" type="vector" label="Scale" default="1.0, 1.0, 1.0"/>
         <parameter name="model" type="file" label="Model" filter="*.model"/>
+		<parameter name="animationGraph" type="file" label="Animation Graph" filter="*.animation_graph"/>
 		<parameter name="enabled" type="boolean" label="Enabled" help="If this object starts enabled.  Only used by Doors for automatic open/close" default="true"/>
 		<parameter name="disableOnNotify" type="boolean" label="Disable on Notify" help="If true, this object will be disabled on receiving a signal.  Only used by Doors for automatic open/close" default="false"/>
 		<parameter name="enableOnNotify" type="boolean" label="Enable on Notify" help="If true, this object will be enabled on receiving a signal.  Only used by Doors for automatic open/close" default="false"/>
@@ -1193,7 +1194,6 @@
         <parameter name="emitMessage" type="string" label="Emit message" help="The listening entity must respond to this message." default="" />
 		<parameter name="timeToWeld" type="integer" label="Time to Weld" help="Controls how long this entity takes to weld." default="10"/>
 		<parameter name="weldTimeScales" type="boolean" label="Scale Weld Time with Team Size" help="Scales timeToWeld based on player count." default="false"/>
-		<parameter name="allowHealSpray" type="boolean" label="Allow Heal Spray" help="Allow Aliens to weld with Heal Spray." default="false"/>
 		<parameter name="teamNumber" type="choice" label="Team Number" default="1">
             <choice label="Marine" value="1"/>
             <choice label="Alien" value="2"/>

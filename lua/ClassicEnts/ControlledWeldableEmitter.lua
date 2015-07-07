@@ -2,7 +2,7 @@
 // Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
 // Designed to work with maps developed for Extra Entities Mod.  
 // Source located at - https://github.com/xToken/ClassicEnts
-// lua\ControlledWeldableEmitter.lua
+// lua\ClassicEnts\ControlledWeldableEmitter.lua
 // - Dragon
 
 Script.Load("lua/ScriptActor.lua")
@@ -29,7 +29,8 @@ class 'ControlledWeldableEmitter' (ScriptActor)
 ControlledWeldableEmitter.kMapName = "controlled_weldable_emitter"
 
 local kDefaultWeldTime = 10
-local kHealSprayTimeSlice = 0.45
+local kHealSprayTimeSlice = 0.45  //Each heal spray is worth this much time.
+local kWeldableMaxHealth = 10
 
 local networkVars = 
 {
@@ -61,7 +62,6 @@ function ControlledWeldableEmitter:OnCreate()
 	self:SetRelevancyDistance(kMaxRelevancyDistance)
 	
 	self.welded = 0
-	self.allowedTeam = 0
 	self.weldedTime = 0
 
 end
@@ -83,7 +83,7 @@ function ControlledWeldableEmitter:OnInitialized()
         end
 		
 		InitMixin(self, EEMMixin)
-		self:SetTeamNumber(kTeam1Index) //self.teamNumber??
+		self:SetTeamNumber(self.teamNumber)
 		
 	end
 	
@@ -91,12 +91,16 @@ function ControlledWeldableEmitter:OnInitialized()
 	InitMixin(self, ScaleModelMixin)
 	InitMixin(self, ControlledMixin)
 	
-	self:SetMaxHealth(10)
+	self:SetMaxHealth(kWeldableMaxHealth)
 	self:SetHealth(1)
 	
 end
 
 function ControlledWeldableEmitter:GetCanTakeDamageOverride()
+    return false
+end
+
+function ControlledWeldableEmitter:GetCanBeHealed()
     return false
 end
 
@@ -125,25 +129,25 @@ function ControlledWeldableEmitter:GetWeldTime()
     return self.timeToWeld or kDefaultWeldTime
 end
 
-/*
-function ControlledWeldableEmitter:OnHealSprayed()
+function ControlledWeldableEmitter:OnHealSpray()
     //Hmmm
-	if Server and self.allowHealSpray and self:GetIsEnabled() then
+	if Server and self:GetIsEnabled() then
 		SHared.Message("test")
 		local timeSlice = kHealSprayTimeSlice
-		//Yea, this will scale in on the marine teams size, but meh.
 		if self.weldTimeScales then
 			local team = self:GetTeam()
 			if team then
 				timeSlice = timeSlice / team:GetNumPlayers()
 			end
 		end
-		self.weldedTime = Clamp(self.weldedTime - timeSlice, 0, self:GetWeldTime())
+		self.weldedTime = Clamp(self.weldedTime + timeSlice, 0, self:GetWeldTime())
 		self.welded = Clamp(self.weldedTime / self:GetWeldTime(), 0, 1)
-		self:SetHealth(math.max(self.welded * 10, 1))
+		self:SetHealth(math.max(self.welded * kWeldableMaxHealth, 1))
+		if self.welded == 1 then
+			self:OnWeldCompleted()
+		end
 	end
 end
-*/
 
 function ControlledWeldableEmitter:GetCanBeWeldedOverride(doer)
 	if doer and doer.GetTeamNumber then
@@ -162,7 +166,7 @@ function ControlledWeldableEmitter:OnWeldOverride(doer, elapsedTime)
 		end
 		self.weldedTime = Clamp(self.weldedTime + elapsedTime, 0, self:GetWeldTime())
 		self.welded = Clamp(self.weldedTime / self:GetWeldTime(), 0, 1)
-		self:SetHealth(math.max(self.welded * 10, 1))
+		self:SetHealth(math.max(self.welded * kWeldableMaxHealth, 1))
 		if self.welded == 1 then
 			self:OnWeldCompleted()
 		end
