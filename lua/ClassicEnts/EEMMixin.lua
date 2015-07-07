@@ -2,7 +2,7 @@
 // Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
 // Designed to work with maps developed for Extra Entities Mod.  
 // Source located at - https://github.com/xToken/ClassicEnts
-// lua\EEMMixin.lua
+// lua\ClassicEnts\EEMMixin.lua
 // - Dragon
 
 EEMMixin = CreateMixin(EEMMixin)
@@ -14,40 +14,16 @@ EEMMixin.type = "EEMMixin"
 
 EEMMixin.networkVars = { }
 
-local function StartsOpenedCallback(self)
-	//Need to account for when the startsOpened flag is set, and waypoint is actually created like it should be.. derp.
-	local updated = false
-	local waypoints = LookupPathingWaypoints(self.name)
-	//Grab first waypoint, invert this moveable and it.
-	if waypoints and waypoints[1] and waypoints[1].entId then
-		local newOrigin = waypoints[1].origin
-		local waypointOrigin = self:GetOrigin()
-		local waypoint = Shared.GetEntity(waypoints[1].entId)
-		if waypoint then
-			waypoint:SetOrigin(waypointOrigin)
-			self:SetOrigin(newOrigin)
-			updated = true
-			//Update Table
-			AddPathingWaypoint(self.name, "home", newOrigin, -1, self:GetId())
-			UpdateWaypointOrigin(self.name, waypoint:GetId(), waypointOrigin)
-		end
-	end
-	if not updated then
-		Shared.Message(string.format("Failed to set door %s to Open state.", self.name))
-	end
-	return false
-end
-
 local function BuildPathingEntityFromDirection(self, direction)
 	local waypointOrigin = self:GetOrigin()
 	//Lookup extents, EEM moved the object the entirety of its extents
-	local extents = self.scale or Vector(1, 1, 1)
+	local extents = Vector(1, 1, 1)
 	if self.model then
 		_, extents = Shared.GetModel(Shared.GetModelIndex(self.model)):GetExtents(self.boneCoords)  
 	end
 	if direction == 0 then
 		waypointOrigin.y = waypointOrigin.y + (extents.y * self.scale.y)
-	elseif direction == 1 then 
+	elseif direction == 1 then
 		waypointOrigin.y = waypointOrigin.y - (extents.y * self.scale.y)
 	elseif direction == 2 then
 		local directionVector = AnglesToVector(self)
@@ -233,6 +209,11 @@ function EEMMixin:__initmixin()
 		self.objectType = ControlledMoveable.kObjectTypes.Elevator
 	end
 	
+	//EEM only allowed marines to 'weld'
+	if self.oldMapName == "logic_weldable" then
+		self.teamNumber = kTeam1Index
+	end
+	
 	if self.oldMapName == "func_door" then
 		self.objectType = ControlledMoveable.kObjectTypes.Door
 		self.enabled = true
@@ -242,6 +223,7 @@ function EEMMixin:__initmixin()
 		end
 		//These will never auto open/close
 		if self.stayOpen then
+			self.open = true
 			self.enabled = false
 			self.initialSetting = false
 		end
@@ -251,18 +233,13 @@ function EEMMixin:__initmixin()
 		else
 			self.model = ControlledMoveable.kDefaultDoor
 		end
+		self.animationGraph = ControlledMoveable.kDefaultAnimationGraph
 	end
 	
-	//EEM StartsOpened - this makes little sense logically, only ref checks if object is also not a door..  In good design this should really never exist.
-	//Object should just be set to inverse direction movement.  But need to support this most likely for 'gates'
-	//Hack this a bit for now.
-	if self.startsOpened and self.objectType ~= ControlledMoveable.kObjectTypes.Door then
-		self:AddTimedCallback(StartsOpenedCallback, 0.1)
-	else
-		//Register ourselves
-		AddPathingWaypoint(self.name, "home", self:GetOrigin(), -1, self:GetId())
+	if self.startsOpened then
+		self.open = true
 	end
-	
+
 end
 
 function EEMMixin:OnDestroy()
