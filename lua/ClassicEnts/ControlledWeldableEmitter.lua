@@ -15,6 +15,7 @@ Script.Load("lua/TeamMixin.lua")
 Script.Load("lua/WeldableMixin.lua")
 Script.Load("lua/MapBlipMixin.lua")
 Script.Load("lua/UnitStatusMixin.lua")
+Script.Load("lua/SelectableMixin.lua")
 Script.Load("lua/ClassicEnts/ScaleModelMixin.lua")
 Script.Load("lua/ClassicEnts/ControlledMixin.lua")
 Script.Load("lua/GameEffectsMixin.lua")
@@ -46,6 +47,7 @@ AddMixinNetworkVars(TeamMixin, networkVars)
 AddMixinNetworkVars(ScaleModelMixin, networkVars)
 AddMixinNetworkVars(ControlledMixin, networkVars)
 AddMixinNetworkVars(GameEffectsMixin, networkVars)
+AddMixinNetworkVars(SelectableMixin, networkVars)
 
 function ControlledWeldableEmitter:OnCreate() 
 
@@ -57,6 +59,7 @@ function ControlledWeldableEmitter:OnCreate()
 	InitMixin(self, SignalEmitterMixin)
 	InitMixin(self, LiveMixin)
     InitMixin(self, TeamMixin)
+	InitMixin(self, SelectableMixin)
     InitMixin(self, GameEffectsMixin)
 	
 	//SignalMixin sets this on init, but I need to confirm its set on ent.
@@ -121,6 +124,10 @@ function ControlledWeldableEmitter:GetCanBeUsed(player, useSuccessTable)
     useSuccessTable.useSuccess = false
 end
 
+function ControlledWeldableEmitter:GetHealthbarOffset()
+    return 0.6
+end
+
 function ControlledWeldableEmitter:GetUnitNameOverride(viewer)
     return "Weldable"
 end
@@ -145,7 +152,6 @@ end
 function ControlledWeldableEmitter:OnHealSpray()
     //Hmmm
 	if Server and self:GetIsEnabled() then
-		SHared.Message("test")
 		local timeSlice = kHealSprayTimeSlice
 		if self.weldTimeScales then
 			local team = self:GetTeam()
@@ -192,6 +198,7 @@ end
 
 function ControlledWeldableEmitter:OnWeldCompleted()
 	self:EmitSignal(self.emitChannel, self.emitMessage)
+	self:SetIsEnabled(false)
 end
 
 Shared.LinkClassToMap("ControlledWeldableEmitter", ControlledWeldableEmitter.kMapName, networkVars)
