@@ -25,6 +25,7 @@ ControlledMoveable.kObjectTypes = enum( {'Door', 'Elevator', 'Gate'} )
 
 local kUpdateAutoOpenRate = 0.3
 local kMoveableUpdateRate = 0
+local kMoveableHeightRange = 2
 
 //These objects support basic interations/triggering, but not pausing once started.  
 //Doors open/close automatically, are enabled/disabled accordingly when triggered.
@@ -103,6 +104,7 @@ function ControlledMoveable:OnCreate()
 	self.destination = Vector(0, 0, 0)
 	self.waypoint = -1
 	self.open = false
+	self.registeredPlayers = { }
 	
 end
 
@@ -141,12 +143,9 @@ function ControlledMoveable:OnInitialized()
 			self:AddTimedCallback(UpdateAutoOpen, kUpdateAutoOpenRate)	
 		end
 		
-		if not self:GetIsAnimated() then
-			self:SetPhysicsType(CollisionObject.Static)
-		end
-		
 		AddPathingWaypoint(self.name, "home", self:GetOrigin(), 0, self:GetId())
-		self:SetPhysicsGroup(PhysicsGroup.CommanderUnitGroup)
+		
+		self:SetPhysicsType(CollisionObject.Static)
 
 		if self.open then
 			self:AddTimedCallback(function(self) self:MoveToWaypoint(1) end, 1)
@@ -173,6 +172,11 @@ function ControlledMoveable:MoveToWaypoint(number)
 
 	if self:GetIsAnimated() then
 		self.open = number ~= 0
+		return
+	end
+	if self.objectType == ControlledMoveable.kObjectTypes.Elevator and self:GetIsMoving() and number ~= 0 then
+		//Triggers to move to next WP will always just call this blank.
+		//But map resets/etc will pass this 0 to send home, still want those to override elevators.
 		return
 	end
 	local waypoints = LookupPathingWaypoints(self.name)
@@ -214,6 +218,7 @@ function ControlledMoveable:Reset()
 	else
 		self:MoveToWaypoint(0)
 	end
+	self:CleanRegisteredPlayers()
 	self.open = self.initialOpenState
 end
 
@@ -233,49 +238,26 @@ function ControlledMoveable:GetIsAnimated()
     return self.animationGraphIndex > 0
 end
 
-function ControlledMoveable:GetControllerSize()
-    return GetTraceCapsuleFromExtents(self:GetExtents())
-end
-
 function ControlledMoveable:GetCanBeUsed(player, useSuccessTable)
     useSuccessTable.useSuccess = false
 end
 
-function ControlledMoveable:UpdatePathingMesh()
+function ControlledMoveable:RegisterRidingPlayer(playerId)
+	table.insertunique(self.registeredPlayers, playerId)
+end
 
-    if GetIsPathingMeshInitialized() and Server then
-   
-        if self.obstacleId ~= -1 then
-            Pathing.RemoveObstacle(self.obstacleId)
-            gAllObstacles[self] = nil
-        end
-		
-		local extents = Vector(1, 1, 1)
-		if self.modelName then
-			_, extents = Shared.GetModel(Shared.GetModelIndex(self.modelName)):GetExtents(self.boneCoords)  
-		end
-		
-		//This gets really hacky.. some models are setup much differently.. their origin is not center mass.
-		//Limit maximum amount of adjustment to try to correct ones that are messed up, but not break ones that are good.
-        local radius = extents.x * self.scale.x
-		local position = self:GetOrigin() + Vector(0, -100, 0)
-		local yaw = self:GetAngles().yaw
-		position.x = position.x + (math.cos(yaw) * radius / 2)
-		position.z = position.z - (math.sin(yaw) * radius / 2)
-		radius = math.min(radius, 2)
-		local height = 1000.0
-		
-        self.obstacleId = Pathing.AddObstacle(position, radius, height) 
-      
-        if self.obstacleId ~= -1 then
-        
-            gAllObstacles[self] = true
-            if self.GetResetsPathing and self:GetResetsPathing() then
-                InformEntitiesInRange(self, 25)
-            end
-            
-        end
-    
+function ControlledMoveable:RemoveRidingPlayer(playerId)
+	table.remove(self.registeredPlayers, playerId)
+end
+
+function ControlledMoveable:OnCapsuleTraceHit(entity)
+
+    PROFILE("ControlledMoveable:OnCapsuleTraceHit")
+
+    if entity and HasMixin(entity, "Moveable") and self.objectType == ControlledMoveable.kObjectTypes.Elevator then
+		self:RegisterRidingPlayer(entity:GetId())
+		entity:SetIsRiding(true)
+		entity:SetRidingId(self:GetId())
     end
     
 end
@@ -297,10 +279,69 @@ function ControlledMoveable:CheckObjectTarget(endPoint)
     
 end
 
+function ControlledMoveable:IsPointOnMoveable(point, deltaTime)
+    
+	// Check dot product
+	local coords = self:GetCoords()
+	local toPoint = point - coords.origin
+	local extents = self:GetModelExtents()
+	local scale = self:GetModelScale()
+	local yDistance = coords.yAxis:DotProduct(toPoint)
+	local xDistance = math.abs(coords.xAxis:DotProduct(toPoint))
+	local zDistance = math.abs(coords.zAxis:DotProduct(toPoint))
+	local xzDistance = math.sqrt(zDistance * zDistance + xDistance * xDistance)
+	//This probably wont work with offset origin models, ever..
+	if xzDistance <= math.abs(extents.x * scale.x) and xzDistance <= math.abs(extents.z * scale.z) and math.abs(yDistance) <= self:GetSpeed() * deltaTime + 0.05 then
+		return true, yDistance
+	end
+	return false, 0
+	
+end
+
+function ControlledMoveable:CleanRegisteredPlayers()
+	for i = 1, #self.registeredPlayers do
+		if self.registeredPlayers[i] then
+			local player = Shared.GetEntity(self.registeredPlayers[i])
+			if player then
+				player:SetIsRiding(false)
+			end
+		end
+	end
+	self.registeredPlayers = { }
+end
+
+function ControlledMoveable:OnUpdatePlayers(moved, deltaTime)
+	local ReRegisteredPlayers = { }
+	for i = 1, #self.registeredPlayers do
+		if self.registeredPlayers[i] then
+			local player = Shared.GetEntity(self.registeredPlayers[i])
+			//Only sim if Server or local player on client NOT doing prediction.
+			if player then
+				local onMoveable, yDistance = self:IsPointOnMoveable(player:GetOrigin(), deltaTime)
+				if onMoveable then
+					local newOrigin = player:GetOrigin()
+					newOrigin.x = newOrigin.x + moved.x
+					newOrigin.y = newOrigin.y + moved.y
+					newOrigin.z = newOrigin.z + moved.z
+					if gDebugClassicEnts then
+						Shared.Message(string.format("Moving player %s to compensate for moveable.", ToString(player:GetOrigin() - newOrigin)))
+					end
+					player:SetOrigin(newOrigin)
+					table.insert(ReRegisteredPlayers, self.registeredPlayers[i])
+				else
+					player:SetIsRiding(false)
+				end
+			end
+		end
+	end
+	self.registeredPlayers = ReRegisteredPlayers
+end
+
 function ControlledMoveable:OnWaypointReached()
 	self.moving = false
-	if not self:GetIsOpen() and self.objectType ~= ControlledMoveable.kObjectTypes.Elevator then
-		self:UpdatePathingMesh()
+	self:CleanRegisteredPlayers()
+	if Server and not self:GetIsOpen() and self.objectType ~= ControlledMoveable.kObjectTypes.Elevator then
+		UpdateScaledModelPathingMesh(self)
 	end
 	if gDebugClassicEnts then
 		Shared.Message(string.format("Moveable %s completed move to waypoint %s at %s.", self.name, self.waypoint, ToString(self:GetOrigin())))
@@ -356,7 +397,11 @@ function ControlledMoveable:OnUpdateMoveable(deltaTime)
 
     PROFILE("ControlledMoveable:OnUpdateMoveable")
 	if self:GetIsMoving() then
+		local dV = self:GetOrigin()
 		self:MoveObjectToTarget(PhysicsMask.All, self.destination, self:GetSpeed(), deltaTime)
+		if Server then
+			//self:OnUpdatePlayers(self:GetOrigin() - dV, deltaTime)
+		end
 	end
 
 end
