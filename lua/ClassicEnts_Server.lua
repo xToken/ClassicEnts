@@ -77,6 +77,40 @@ end
 gDebugClassicEnts = false
 local function OnCommandDebugCents(client)
 	gDebugClassicEnts = not gDebugClassicEnts
+	Shared.Message(string.format("Classic Entities Debug messages set to %s.", gDebugClassicEnts and "Enabled" or "Disabled"))
 end
 
 Event.Hook("Console_classicentsdebug", OnCommandDebugCents)
+Event.Hook("Console_centsdebug", OnCommandDebugCents)
+
+//New PathingObstacleAdd function, uses model extents and scale
+function UpdateScaledModelPathingMesh(entity)
+
+    if GetIsPathingMeshInitialized() then
+   
+        if entity.obstacleId ~= -1 then
+            Pathing.RemoveObstacle(entity.obstacleId)
+            gAllObstacles[entity] = nil
+        end
+		
+		//This gets really hacky.. some models are setup much differently.. their origin is not center mass.
+		//Limit maximum amount of adjustment to try to correct ones that are messed up, but not break ones that are good.
+		local extents = entity:GetModelExtentsVector()
+		local scale = entity:GetModelScale()
+        local radius = extents.x * scale.x
+		local position = entity:GetOrigin() + Vector(0, -100, 0)
+		local yaw = entity:GetAngles().yaw
+		position.x = position.x + (math.cos(yaw) * radius / 2)
+		position.z = position.z - (math.sin(yaw) * radius / 2)
+		radius = math.min(radius, 2)
+		local height = 1000.0
+		
+        entity.obstacleId = Pathing.AddObstacle(position, radius, height) 
+      
+        if entity.obstacleId ~= -1 then
+            gAllObstacles[entity] = true
+        end
+    
+    end
+    
+end

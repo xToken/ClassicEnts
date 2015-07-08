@@ -10,6 +10,8 @@ Script.Load("lua/ObstacleMixin.lua")
 Script.Load("lua/LiveMixin.lua")
 Script.Load("lua/TeamMixin.lua")
 Script.Load("lua/GameEffectsMixin.lua")
+Script.Load("lua/UnitStatusMixin.lua")
+Script.Load("lua/SelectableMixin.lua")
 Script.Load("lua/Mixins/SignalEmitterMixin.lua")
 Script.Load("lua/ClassicEnts/EEMMixin.lua")
 Script.Load("lua/ClassicEnts/ScaleModelMixin.lua")
@@ -32,23 +34,25 @@ local networkVars =
 }
 
 AddMixinNetworkVars(BaseModelMixin, networkVars)
-AddMixinNetworkVars(ClientModelMixin, networkVars)
+AddMixinNetworkVars(ModelMixin, networkVars)
 AddMixinNetworkVars(LiveMixin, networkVars)
 AddMixinNetworkVars(TeamMixin, networkVars)
 AddMixinNetworkVars(ObstacleMixin, networkVars)
 AddMixinNetworkVars(GameEffectsMixin, networkVars)
 AddMixinNetworkVars(ScaleModelMixin, networkVars)
+AddMixinNetworkVars(SelectableMixin, networkVars)
 
 function BreakableEmitter:OnCreate() 
 
     ScriptActor.OnCreate(self)
 	
 	InitMixin(self, BaseModelMixin)
-    InitMixin(self, ClientModelMixin)
+    InitMixin(self, ModelMixin)
 	InitMixin(self, SignalEmitterMixin)
 	InitMixin(self, LiveMixin)
     InitMixin(self, TeamMixin)
     InitMixin(self, GameEffectsMixin)
+	InitMixin(self, SelectableMixin)
 	InitMixin(self, ObstacleMixin)
 	
 	//SignalMixin sets this on init, but I need to confirm its set on ent.
@@ -85,8 +89,10 @@ function BreakableEmitter:OnInitialized()
 	
 		InitMixin(self, EEMMixin)
 		
-		self:AddTimedCallback(function(self) self:UpdatePathingMesh() end, 1)
+		self:AddTimedCallback(function(self) UpdateScaledModelPathingMesh(self) end, 1)
 		
+	elseif Client then
+        InitMixin(self, UnitStatusMixin)
 	end
 	
 	if self.surface then
@@ -96,51 +102,14 @@ function BreakableEmitter:OnInitialized()
 		end
 	end
 	
+	self:SetPhysicsType(CollisionObject.Static)
+	
 	self.health = self.health or kDefaultBreakableHealth
 	self:SetMaxHealth(self.health)
 	self:SetHealth(self.health)
 	
 	InitMixin(self, ScaleModelMixin)
 	
-end
-
-function BreakableEmitter:UpdatePathingMesh()
-
-    if GetIsPathingMeshInitialized() and Server then
-   
-        if self.obstacleId ~= -1 then
-            Pathing.RemoveObstacle(self.obstacleId)
-            gAllObstacles[self] = nil
-        end
-		
-		local extents = Vector(1, 1, 1)
-		if self.modelName then
-			_, extents = Shared.GetModel(Shared.GetModelIndex(self.modelName)):GetExtents(self.boneCoords)  
-		end
-		
-		//This gets really hacky.. some models are setup much differently.. their origin is not center mass.
-		//Limit maximum amount of adjustment to try to correct ones that are messed up, but not break ones that are good.
-        local radius = extents.x * self.scale.x
-		local position = self:GetOrigin() + Vector(0, -100, 0)
-		local yaw = self:GetAngles().yaw
-		position.x = position.x + (math.cos(yaw) * radius / 2)
-		position.z = position.z - (math.sin(yaw) * radius / 2)
-		radius = math.min(radius, 2)		
-		local height = 1000.0
-		
-        self.obstacleId = Pathing.AddObstacle(position, radius, height) 
-      
-        if self.obstacleId ~= -1 then
-        
-            gAllObstacles[self] = true
-            if self.GetResetsPathing and self:GetResetsPathing() then
-                InformEntitiesInRange(self, 25)
-            end
-            
-        end
-    
-    end
-    
 end
 
 function BreakableEmitter:Reset()
@@ -157,6 +126,10 @@ end
 
 function BreakableEmitter:GetCanTakeDamageOverride()
     return true
+end
+
+function BreakableEmitter:GetUnitNameOverride(viewer)
+    return "Breakable"
 end
 
 function BreakableEmitter:GetCanBeHealed()

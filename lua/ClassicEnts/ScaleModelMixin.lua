@@ -23,10 +23,30 @@ function ScaleModelMixin:GetModelScale()
     return self.scale
 end
 
+//Oh boy
+function ScaleModelMixin:GetCoords()
+	local coords = Entity.GetCoords(self)
+    if self.scale and coords then
+        coords.xAxis = coords.xAxis * self.scale.x
+        coords.yAxis = coords.yAxis * self.scale.y
+        coords.zAxis = coords.zAxis * self.scale.z
+    end
+	return coords
+end
+
 function ScaleModelMixin:SetModelScale(newScale)
 	if newScale and type(newScale) == "cdata" and newScale:isa("Vector") then
 		self.scale = newScale
 	end
+end
+
+function ScaleModelMixin:GetModelExtentsVector()
+	local extents = Vector(1, 1, 1)
+	local _, e = self:GetModelExtents()
+	if e then
+		extents = e
+	end
+	return extents
 end
 
 function ScaleModelMixin:OnAdjustModelCoords(modelCoords)

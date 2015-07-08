@@ -17,14 +17,12 @@ EEMMixin.networkVars = { }
 local function BuildPathingEntityFromDirection(self, direction)
 	local waypointOrigin = self:GetOrigin()
 	//Lookup extents, EEM moved the object the entirety of its extents
-	local extents = Vector(1, 1, 1)
-	if self.model then
-		_, extents = Shared.GetModel(Shared.GetModelIndex(self.model)):GetExtents(self.boneCoords)  
-	end
+	local extents = self:GetModelExtents()
+	local scale = self:GetModelScale()
 	if direction == 0 then
-		waypointOrigin.y = waypointOrigin.y + (extents.y * self.scale.y)
+		waypointOrigin.y = waypointOrigin.y + (extents.y * scale.y)
 	elseif direction == 1 then
-		waypointOrigin.y = waypointOrigin.y - (extents.y * self.scale.y)
+		waypointOrigin.y = waypointOrigin.y - (extents.y * scale.y)
 	elseif direction == 2 then
 		local directionVector = AnglesToVector(self)
 		waypointOrigin.x = waypointOrigin.x + (directionVector.z * -extents.x)
