@@ -50,3 +50,5 @@ function BuildClassToGrid()
 	ClassToGrid["ControlledWeldableEmitter"] = { 1, 1 }
 	return ClassToGrid
 end
+
+AddClientUIScriptForTeam("all", "ClassicEnts/GUIDialogMessage")
