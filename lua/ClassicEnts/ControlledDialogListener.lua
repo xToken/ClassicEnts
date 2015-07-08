@@ -21,7 +21,8 @@ local kClientDialogData = { }
 
 local networkVars = 
 { 
-	dialogChannel = "integer"
+	dialogChannel = "integer",
+	dialogTime = "integer"
 }
 
 AddMixinNetworkVars(ControlledMixin, networkVars)
@@ -51,6 +52,7 @@ function ControlledDialogListener:OnCreate()
 	
 	if Server then
 		self.dialogChannel = 0
+		self.dialogTime = kDialogDefaultDisplayTime
 		self.teamNumber = 0
 	end
 	
@@ -88,10 +90,9 @@ function ControlledDialogListener:OnInitialized()
 	//These are created as non-relevant to everything.  Once enabled, they become relevant to Clients
 	if Client and self:GetIsEnabled() then
 		//Create GUI or whatever, display dialog
-		//This is cheated into teammessages atm
-		local player = Client.GetLocalPlayer()
-		if player and HasMixin(player, "TeamMessage") and RetrieveClientDialogData(self.dialogChannel) then
-			player:SetTeamMessage(RetrieveClientDialogData(self.dialogChannel))
+		local GUIDialogMessage = ClientUI.GetScript("ClassicEnts/GUIDialogMessage")
+		if GUIDialogMessage and RetrieveClientDialogData(self.dialogChannel) then
+			GUIDialogMessage:UpdateDialog(RetrieveClientDialogData(self.dialogChannel), self.dialogTime)
 		end
 		
 	end
@@ -128,7 +129,7 @@ if Client then
 
 	function BreakableEmitter:OnDestroy()
 		Entity.OnDestroy(self)
-		//Cleanup GUI
+		//Cleanup GUI?
 	end
 	
 end
