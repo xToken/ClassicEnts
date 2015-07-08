@@ -10,6 +10,7 @@ Script.Load("lua/ClassicEnts/ControlledButtonEmitter.lua")
 Script.Load("lua/ClassicEnts/ControlledMoveable.lua")
 Script.Load("lua/ClassicEnts/ControlledWeldableEmitter.lua")
 Script.Load("lua/ClassicEnts/ControlledDialogListener.lua")
+Script.Load("lua/ClassicEnts/MoveableMixin.lua")
 
 local function AppendToEnum( tbl, key )
 	if rawget(tbl,key) ~= nil then
@@ -32,4 +33,18 @@ local function AppendToEnum( tbl, key )
 end
 
 AppendToEnum( kMinimapBlipType, 'ControlledWeldableEmitter' )
+
+local originalPlayerOnCreate
+originalPlayerOnCreate = Class_ReplaceMethod("Player", "OnCreate",
+	function(self)
+		originalPlayerOnCreate(self)
+		InitMixin(self, MoveableMixin)
+	end
+)
+
+local networkVars = { }
+
+AddMixinNetworkVars(MoveableMixin, networkVars)
+
+Shared.LinkClassToMap("Player", Player.kMapName, networkVars, true)
 
