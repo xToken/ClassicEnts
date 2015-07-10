@@ -15,6 +15,7 @@ Script.Load("lua/SelectableMixin.lua")
 Script.Load("lua/Mixins/SignalEmitterMixin.lua")
 Script.Load("lua/ClassicEnts/EEMMixin.lua")
 Script.Load("lua/ClassicEnts/ScaleModelMixin.lua")
+Script.Load("lua/ClassicEnts/GameWorldMixin.lua")
 
 //Destroyable entities which are re-created on game reset, can emit on channel when destroyed.
 //Takes health, surface, emitChannel, allowedTeam.  Optionally a cinematicName for onKill
@@ -89,7 +90,8 @@ function BreakableEmitter:OnInitialized()
 	
 		InitMixin(self, EEMMixin)
 		
-		self:AddTimedCallback(function(self) UpdateScaledModelPathingMesh(self) end, 1)
+		self:AddTimedCallback(function(self) self:UpdateScaledModelPathingMesh() end, 1)
+		self:AddTimedCallback(function(self) self:AddAdditionalPhysicsModel() end, 1)
 		
 	elseif Client then
         InitMixin(self, UnitStatusMixin)
@@ -102,13 +104,14 @@ function BreakableEmitter:OnInitialized()
 		end
 	end
 	
-	self:SetPhysicsType(CollisionObject.Static)
+	self:SetPhysicsType(PhysicsType.Kinematic)
 	
 	self.health = self.health or kDefaultBreakableHealth
 	self:SetMaxHealth(self.health)
 	self:SetHealth(self.health)
 	
 	InitMixin(self, ScaleModelMixin)
+	InitMixin(self, GameWorldMixin)
 	
 end
 
@@ -143,6 +146,10 @@ function BreakableEmitter:GetShowHitIndicator()
     return true
 end
 
+function BreakableEmitter:GetReceivesStructuralDamage()
+    return true
+end
+
 function BreakableEmitter:GetAllowedTeam()
     return self.allowedTeam or 0
 end
@@ -158,6 +165,11 @@ if Server then
 		self:EmitSignal(self.emitChannel, self.emitMessage)
 		self:TriggerEffects("death", { cinematic = self.cinematicName } )
 		DestroyEntity(self)
+	end
+	
+	function BreakableEmitter:OnDestroy()
+		self:CleanupPhysicsModelAdder()
+		ScriptActor.OnDestroy(self)
 	end
 	
 end
