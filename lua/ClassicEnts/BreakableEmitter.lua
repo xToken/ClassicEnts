@@ -91,7 +91,7 @@ function BreakableEmitter:OnInitialized()
 		InitMixin(self, EEMMixin)
 		
 		self:AddTimedCallback(function(self) self:UpdateScaledModelPathingMesh() end, 1)
-		self:AddTimedCallback(function(self) self:AddAdditionalPhysicsModel() end, 1)
+		//self:AddTimedCallback(function(self) self:AddAdditionalPhysicsModel() end, 1)
 		
 	elseif Client then
         InitMixin(self, UnitStatusMixin)
