@@ -159,15 +159,19 @@ function GUIDialogMessage:Update(deltaTime)
 	//Fades out after displayTime.
     if PlayerUI_IsACommander() then
     
-        self.backGroundColor.a = 0
-        self:SetBackgroundColor(self.backGroundColor)
+		if self.backGroundColor then
+			self.backGroundColor.a = 0
+			self:SetBackgroundColor(self.backGroundColor)
+		end
         
     else
 
         if self.timeLastData + self.displayTime < Shared.GetTime() then
 
-            self.backGroundColor.a = math.max(0, self.backGroundColor.a - deltaTime)
-            self:SetBackgroundColor(self.backGroundColor)
+			if self.backGroundColor then
+				self.backGroundColor.a = math.max(0, self.backGroundColor.a - deltaTime)
+				self:SetBackgroundColor(self.backGroundColor)
+			end
 
         end
         
