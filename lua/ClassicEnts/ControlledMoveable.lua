@@ -373,7 +373,7 @@ function ControlledMoveable:OnUpdateMoveable(deltaTime)
     PROFILE("ControlledMoveable:OnUpdateMoveable")
 	if self:GetIsMoving() then
 		local dV = self:MoveObjectToTarget(self.destination, self:GetSpeed(), deltaTime)
-		//self:OnUpdatePlayers(dV, deltaTime)
+		self:OnUpdatePlayers(dV, deltaTime)
 	end
 
 end
