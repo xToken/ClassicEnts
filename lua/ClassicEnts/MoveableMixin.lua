@@ -27,22 +27,14 @@ function MoveableMixin:SetRidingId(entId)
 end
 
 function MoveableMixin:SetIsRiding(riding)
-	if not riding and Server then
-		//Deregister on Moveable
-		local moveable = Shared.GetEntity(self.ridingId)
-		if moveable then
-			moveable:RemoveRidingPlayer(self:GetId())
-		end
-	end
     self.riding = riding
 end
 
-function MoveableMixin:OnJump()
+function MoveableMixin:OnJumpRequest()
     self:SetIsRiding(false)
 end
 
 //This sucks a bit
-/*
 function Player:OverrideUpdateOnGround(onGround)
     return onGround or self:GetIsRiding()
 end
@@ -58,4 +50,3 @@ end
 function JetpackMarine:OverrideUpdateOnGround(onGround)
     return Player.OverrideUpdateOnGround(self, onGround) and not self:GetIsJetpacking()
 end
-*/
