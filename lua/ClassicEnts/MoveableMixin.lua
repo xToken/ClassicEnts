@@ -10,43 +10,35 @@ MoveableMixin.type = "Moveable"
 
 MoveableMixin.networkVars =
 {
-    riding = "compensated boolean"
+    baseVelocity = "compensated vector",
 }
 
 function MoveableMixin:__initmixin()
-    self.riding = false
-	self.ridingId = Entity.invalidId
+    self:ClearBaseVelocity()
 end
 
-function MoveableMixin:GetIsRiding()
-    return self.riding
+function MoveableMixin:ClearBaseVelocity()
+    self.baseVelocity = Vector(0, 0, 0)
 end
 
-function MoveableMixin:SetRidingId(entId)
-    self.ridingId = entId
+function MoveableMixin:SetBaseVelocity(vel)
+    self.baseVelocity = vel
 end
 
-function MoveableMixin:SetIsRiding(riding)
-    self.riding = riding
+function MoveableMixin:GetBaseVelocity()
+    return self.baseVelocity
 end
 
-function MoveableMixin:OnJumpRequest()
-    self:SetIsRiding(false)
-end
-
-//This sucks a bit
-function Player:OverrideUpdateOnGround(onGround)
-    return onGround or self:GetIsRiding()
-end
-
-function Skulk:OverrideUpdateOnGround(onGround)
-    return Player.OverrideUpdateOnGround(self, onGround) or self:GetIsWallWalking()
-end
-
-function Lerk:OverrideUpdateOnGround(onGround)
-    return (Player.OverrideUpdateOnGround(self, onGround) or self:GetIsWallGripping()) and not self.gliding
-end
-
-function JetpackMarine:OverrideUpdateOnGround(onGround)
-    return Player.OverrideUpdateOnGround(self, onGround) and not self:GetIsJetpacking()
+function MoveableMixin:ModifyVelocity(input, velocity, deltaTime)
+	
+	if self.baseVelocity:GetLength() > 0.01 then
+		if self.baseVelocity.y > 0 then
+			//liftoff
+			self.onGround = false  
+            self.jumping = true
+		end
+		velocity:Add(self.baseVelocity)
+		self:ClearBaseVelocity()
+	end
+	
 end

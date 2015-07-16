@@ -10,6 +10,7 @@ Script.Load("lua/ClassicEnts/ControlledButtonEmitter.lua")
 Script.Load("lua/ClassicEnts/ControlledMoveable.lua")
 Script.Load("lua/ClassicEnts/ControlledWeldableEmitter.lua")
 Script.Load("lua/ClassicEnts/ControlledDialogListener.lua")
+Script.Load("lua/ClassicEnts/ControlledPusher.lua")
 Script.Load("lua/ClassicEnts/MoveableMixin.lua")
 
 local function AppendToEnum( tbl, key )

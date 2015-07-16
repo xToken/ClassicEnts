@@ -1144,6 +1144,8 @@
 		<parameter name="name" label="Name" type="string" help="The name of this Moveable Object - Controls Waypoints." default="ReplaceMe" />
 		<parameter name="speed" type="integer" label="Speed" help="Controls how fast this object moves." default="10" />
 		<parameter name="open" type="boolean" label="Open" help="Controls if this object starts Opened or Closed (Only Doors and Gates)" default="false"/>
+		<parameter name="detectionRadius" type="integer" label="Detection Radius" help="Determines how close an entity needs to get before a door will automatically open for it." default="10"/>
+		<parameter name="blockedDamage" type="integer" label="Blocked Damage" help="How much damage the moveable deals if blocked.  This damage is dealt once only when blocked." default="1"/>
 		<parameter name="objectType" type="choice" label="Type of Moveable Object" default="3">
             <choice label="Door" value="1"/>
             <choice label="Elevator" value="2"/>
@@ -1220,6 +1222,18 @@
             <choice label="Marine" value="1"/>
             <choice label="Alien" value="2"/>
         </parameter>
+		
+    </class>
+	
+	<class name="controlled_pusher">
+	
+		<parent>signal_listener</parent>
+        <parent>trigger</parent>
+        
+		<parameter name="enabled" type="boolean" label="Enabled" help="If this object starts enabled." default="true"/>
+		<parameter name="disableOnNotify" type="boolean" label="Disable on Notify" help="If true, this object will be disabled on receiving a signal." default="false"/>
+		<parameter name="enableOnNotify" type="boolean" label="Enable on Notify" help="If true, this object will be enabled on receiving a signal." default="false"/>
+        <parameter name="force" type="integer" label="Force" help="How much force the player is pushed with." default="50"/>
 		
     </class>
 	

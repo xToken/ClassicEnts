@@ -139,7 +139,7 @@ function EEMMixin:__initmixin()
 	
 	//EEM Direction - numerical translation to how moveable objects.. move.  0 = up, 1-= down, 2 = east, 3 = west (I THINK), 4 = Use waypoints
 	//Realistically this is kinda sloppy, everything should just use waypoints for greater control, but need to support what exists
-	if self.direction ~= nil then
+	if IsNumber(self.direction) then
 		self:AddTimedCallback(function(self) BuildPathingEntityFromDirection(self, self.direction) end, 1)
 	end
 	
@@ -174,6 +174,10 @@ function EEMMixin:__initmixin()
 	if self.tooltip ~= nil then
 		self.dialogText = self.tooltip
 		self.localDialog = true
+	end
+	
+	if self.pushForce ~= nil then
+		self.force = self.pushForce
 	end
 	
 	//Translate output1 as the main 'emit channel'.  If output1 etc are used, I should always use them right..?

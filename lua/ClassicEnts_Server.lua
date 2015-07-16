@@ -36,7 +36,8 @@ local kMapNameTranslationTable =
 	["logic_function"] = "function_listener",
 	["teleport_trigger"] = "controlled_teleporter",
 	["teleport_destination"] = "controlled_teleporter",
-	["logic_breakable"] = "breakable_emitter"
+	["logic_breakable"] = "breakable_emitter",
+	["push_trigger"] = "controlled_pusher"
 }
 
 local function DumpServerEntity(mapName, groupName, values)
