@@ -11,7 +11,6 @@ GameWorldMixin.type = "GameWorld"
 GameWorldMixin.networkVars = { }
 
 function GameWorldMixin:__initmixin()
-	
 end
 
 //This creates/deletes a physics model not attached to an entity, so it wont be filtered out of traces.
@@ -59,4 +58,9 @@ function GameWorldMixin:UpdateScaledModelPathingMesh()
     
     end
     
+end
+
+function GameWorldMixin:OnDestroy()
+	self:CleanupPhysicsModelAdder()
+	self:RemoveFromMesh()
 end
