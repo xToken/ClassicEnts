@@ -16,7 +16,7 @@ FunctionListener.kMapName = "function_listener"
 
 local networkVars = {  }
 
-local function TriggerListener(self)
+local function TriggerListener(self, message)
 	if self.functionOperation == 0 then
         Print("Test")
 	end
