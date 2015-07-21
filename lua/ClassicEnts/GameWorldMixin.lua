@@ -15,13 +15,14 @@ end
 
 //This creates/deletes a physics model not attached to an entity, so it wont be filtered out of traces.
 function GameWorldMixin:AddAdditionalPhysicsModel()
+	self:CleanupAdditionalPhysicsModel()
 	if not self.additionalPhysicsModel then
 		self.additionalPhysicsModel = Shared.CreatePhysicsModel(self.model, false, self:GetCoords(), nil) 
 		self.additionalPhysicsModel:SetPhysicsType(CollisionObject.Static)
 	end
 end
 
-function GameWorldMixin:CleanupPhysicsModelAdder()
+function GameWorldMixin:CleanupAdditionalPhysicsModel()
 	if self.additionalPhysicsModel then
         Shared.DestroyCollisionObject(self.additionalPhysicsModel)
         self.additionalPhysicsModel = nil
@@ -61,6 +62,6 @@ function GameWorldMixin:UpdateScaledModelPathingMesh()
 end
 
 function GameWorldMixin:OnDestroy()
-	self:CleanupPhysicsModelAdder()
+	self:CleanupAdditionalPhysicsModel()
 	self:RemoveFromMesh()
 end
