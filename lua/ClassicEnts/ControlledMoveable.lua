@@ -25,6 +25,8 @@ ControlledMoveable.kDefaultAnimationGraph = "models/misc/door/door.animation_gra
 ControlledMoveable.kObjectTypes = enum( {'Door', 'Elevator', 'Gate'} )
 
 local kUpdateAutoOpenRate = 0.3
+local kMaxDetectionRadius = 25
+local kControllerScale = 0.75
 
 //These objects support basic interations/triggering, but not pausing once started.  
 //Doors open/close automatically, are enabled/disabled accordingly when triggered.
@@ -34,8 +36,10 @@ local kUpdateAutoOpenRate = 0.3
 local networkVars = 
 {
 	moving = "boolean",
+	speed = "integer",
 	destination = "vector",
 	objectType = "enum ControlledMoveable.kObjectTypes",
+	blockedDamage = "integer",
 	open = "boolean"
 }
 
@@ -51,26 +55,18 @@ local function UpdateAutoOpen(self, timePassed)
     
         local desiredOpenState = false
 		
-		local entities = Shared.GetEntitiesWithTagInRange("Door", self:GetOrigin(), DoorMixin.kMaxOpenDistance)
+		//GetEntsInRange will grab a little further than passed ranged.
+		//Allow ents to still not trigger door opening if they want (rooted whips etc), but ignore range override.
+		local entities = Shared.GetEntitiesWithTagInRange("Door", self:GetOrigin(), self:GetDetectionRadius())
 		for i = 1, #entities do
-   
             local entity = entities[i]
 			if entity then
-				local opensForEntity, openDistance = entity:GetCanDoorInteract(self)
-				
+				local opensForEntity = entity:GetCanDoorInteract(self)
 				if opensForEntity then
-				
-					local distSquared = self:GetDistanceSquared(entity)
-					if (not HasMixin(entity, "Live") or entity:GetIsAlive()) and entity:GetIsVisible() and distSquared < (openDistance * openDistance) then
-					
-						desiredOpenState = true
-						break
-					
-					end
-				
+					desiredOpenState = true
+					break
 				end
 			end
-            
         end
         
         if desiredOpenState and not self:GetIsOpen() then
@@ -97,14 +93,19 @@ function ControlledMoveable:OnCreate()
 	
 	//SignalMixin sets this on init, but I need to confirm its set on ent.
 	self.listenChannel = nil
-	self.moving = false
-	self.speed = 10
-	self.objectType = ControlledMoveable.kObjectTypes.Gate
-	self.destination = Vector(0, 0, 0)
-	self.waypoint = -1
-	self.open = false
-	self.registeredPlayers = { }
 	
+	if Server then
+		self.moving = false
+		self.speed = 10
+		self.objectType = ControlledMoveable.kObjectTypes.Gate
+		self.destination = Vector(0, 0, 0)
+		self.open = false
+		self.waypoint = -1
+		self.lastWaypoint = -1
+		self.detectionRadius = DoorMixin.kMaxOpenDistance
+		self.blockedDamage = 0
+	end	
+
 end
 
 function ControlledMoveable:OnInitialized()
@@ -143,18 +144,20 @@ function ControlledMoveable:OnInitialized()
 		end
 		
 		AddPathingWaypoint(self.name, "home", self:GetOrigin(), 0, self:GetId())
-
+		
 		if self.open then
-			self:AddTimedCallback(function(self) self:MoveToWaypoint(1) end, 1)
+			self:AddTimedCallback(function(self) self:MoveToWaypoint(1, true) end, 1)
 		end
+		
+		self.detectionRadius = Clamp(self.detectionRadius, 1, kMaxDetectionRadius)
 		
 	end
 	
-	self:SetPhysicsType(PhysicsType.Kinematic)
-	self.initialOpenState = self.open
-	self:SetLagCompensated(true)
 	InitMixin(self, ScaleModelMixin)
 	InitMixin(self, GameWorldMixin)
+	
+	self:SetPhysicsType(PhysicsType.Kinematic)
+	self.homeWaypoint = self.open and 1 or 0
 	
 end
 
@@ -167,56 +170,59 @@ function ControlledMoveable:OverrideListener()
 	end
 end
 
-function ControlledMoveable:MoveToWaypoint(number)
+function ControlledMoveable:GetNextWaypoint(number)
+	local waypoints = LookupPathingWaypoints(self.name)
+	local target
+	if waypoints then
+		number = number or (self.waypoint + 1)
+		target = waypoints[1]
+		for i = 1, #waypoints do
+			if waypoints[i] and waypoints[i].number >= number then
+				//Found closest waypoint to number, but dont move if its already where we are.
+				if self.waypoint ~= waypoints[i].number then
+					target = waypoints[i]
+				end
+				break
+			end
+		end
+	else
+		Shared.Message(string.format("Moveable %s has no valid waypoints!", self.name))
+	end
+	return target
+end
+
+
+function ControlledMoveable:MoveToWaypoint(number, force)
 
 	if self:GetIsAnimated() then
 		self.open = number ~= 0
 		return
 	end
-	if self.objectType == ControlledMoveable.kObjectTypes.Elevator and self:GetIsMoving() and number ~= 0 then
+	if self.objectType == ControlledMoveable.kObjectTypes.Elevator and self:GetIsMoving() and not force then
 		//Triggers to move to next WP will always just call this blank.
 		//But map resets/etc will pass this 0 to send home, still want those to override elevators.
 		return
 	end
-	local waypoints = LookupPathingWaypoints(self.name)
-	if waypoints then
-		number = number or (self.waypoint + 1)
-		local target = waypoints[1]
-		for i = 1, #waypoints do
-			if waypoints[i] and waypoints[i].number >= number then
-				target = waypoints[i]
-				break
-			end
+	local target = self:GetNextWaypoint(number)
+	if target then
+		//We are go
+		if gDebugClassicEnts then
+			Shared.Message(string.format("Moveable %s moving from waypoint %s at %s to waypoint %s at %s.", self.name, self.waypoint, ToString(self:GetOrigin()), target.number, ToString(target.origin)))
 		end
-		if target and self.waypoint ~= target.number then
-			//We are go
-			if gDebugClassicEnts then
-				Shared.Message(string.format("Moveable %s moving from waypoint %s at %s to waypoint %s at %s.", self.name, self.waypoint, ToString(self:GetOrigin()), target.number, ToString(target.origin)))
-			end
-			self.waypoint = target.number
-			self.destination = target.origin
-			self.moving = true
-			self:RemoveFromMesh()
-			self:CleanupPhysicsModelAdder()
-		end
-	else
-		Shared.Message(string.format("Moveable %s with invalid waypoints.", self.name))
+		self.lastWaypoint = self.waypoint
+		self.waypoint = target.number
+		self.destination = target.origin
+		self.moving = true
+		self:RemoveFromMesh()
+		self:CleanupAdditionalPhysicsModel()
 	end
 	self.open = self.waypoint ~= 0
 	
 end
 
 function ControlledMoveable:Reset()
-
 	self.waypoint = -1
-	if self.initialOpenState then
-		self:MoveToWaypoint(1)
-	else
-		self:MoveToWaypoint(0)
-	end
-	self:CleanRegisteredPlayers()
-	self.open = self.initialOpenState
-	
+	self:MoveToWaypoint(self.homeWaypoint, true)
 end
 
 function ControlledMoveable:GetIsMoving()
@@ -227,6 +233,14 @@ function ControlledMoveable:GetSpeed()
     return self.speed
 end
 
+function ControlledMoveable:GetDetectionRadius()
+    return self.detectionRadius
+end
+
+function ControlledMoveable:GetBlockedDamage()
+    return self.blockedDamage
+end
+
 function ControlledMoveable:GetIsOpen()
     return self.open
 end
@@ -235,98 +249,17 @@ function ControlledMoveable:GetIsAnimated()
     return self.animationGraphIndex > 0
 end
 
+function ControlledMoveable:GetInfluencesMovement()
+	return self.objectType == ControlledMoveable.kObjectTypes.Elevator
+end
+
 function ControlledMoveable:GetCanBeUsed(player, useSuccessTable)
     useSuccessTable.useSuccess = false
-end
-
-function ControlledMoveable:RegisterRidingPlayer(playerId)
-	table.insertunique(self.registeredPlayers, playerId)
-end
-
-function ControlledMoveable:RemoveRidingPlayer(playerId)
-	table.remove(self.registeredPlayers, playerId)
-end
-
-function ControlledMoveable:OnCapsuleTraceHit(entity)
-
-    PROFILE("ControlledMoveable:OnCapsuleTraceHit")
-
-    if entity and HasMixin(entity, "Moveable") and self.objectType == ControlledMoveable.kObjectTypes.Elevator then
-		self:RegisterRidingPlayer(entity:GetId())
-		if self:GetIsMoving() then
-			entity:SetIsRiding(true)
-			entity:SetRidingId(self:GetId())
-		end
-    end
-    
-end
-
-function ControlledMoveable:IsPlayerOnMoveable(player, moveableId)
-
-	PROFILE("ControlledMoveable:IsPointOnMoveable")
-	
-    local point = player:GetOrigin()
-	local yAdjustment = 0
-	local onMoveable = false
-    local trace = Shared.TraceRay(Vector(point.x, point.y + 1, point.z), Vector(point.x, point.y - 100, point.z), CollisionRep.Move, PhysicsMask.AllButPCs, EntityFilterOne(player))
-    if trace.fraction ~= 1 then
-        yAdjustment = trace.endPoint.y - point.y
-		onMoveable = trace.entity ~= nil and trace.entity:GetId() == moveableId
-	end
-	return onMoveable, yAdjustment
-	
-end
-
-function ControlledMoveable:CleanRegisteredPlayers()
-
-	for i = 1, #self.registeredPlayers do
-		if self.registeredPlayers[i] then
-			local player = Shared.GetEntity(self.registeredPlayers[i])
-			if player then
-				player:SetIsRiding(false)
-			end
-		end
-	end
-	self.registeredPlayers = { }
-	
-end
-
-function ControlledMoveable:OnUpdatePlayers(moved, deltaTime)
-
-	PROFILE("ControlledMoveable:OnUpdatePlayers")
-	
-	for i = #self.registeredPlayers, 1, -1 do
-		if self.registeredPlayers[i] then
-			local player = Shared.GetEntity(self.registeredPlayers[i])
-			if player and player:GetIsOnGround() then
-				local onMoveable, yAdjustment = self:IsPlayerOnMoveable(player, self:GetId())
-				if onMoveable then
-					local newOrigin = player:GetOrigin()
-					newOrigin.x = newOrigin.x + moved.x
-					if moved.y <= 0 then
-						newOrigin.y = newOrigin.y + yAdjustment
-					end
-					newOrigin.z = newOrigin.z + moved.z
-					if gDebugClassicEnts then
-						Shared.Message(string.format("Moving player %s to compensate for moveable.", ToString(newOrigin - player:GetOrigin())))
-					end
-					player:SetOrigin(newOrigin)
-					player:SetIsRiding(true)
-					player:SetRidingId(self:GetId())
-				else
-					player:SetIsRiding(false)
-				end
-			end
-		end
-	end
-
 end
 
 function ControlledMoveable:OnWaypointReached()
 
 	self.moving = false
-	self:CleanRegisteredPlayers()
-	self:CleanupPhysicsModelAdder()
 	if Server and not self:GetIsOpen() and self.objectType ~= ControlledMoveable.kObjectTypes.Elevator then
 		self:UpdateScaledModelPathingMesh()
 		self:AddAdditionalPhysicsModel()
@@ -338,44 +271,60 @@ function ControlledMoveable:OnWaypointReached()
 	
 end
 
-function ControlledMoveable:MoveObjectToTarget(endPoint, movespeed, time)
+function ControlledMoveable:OnProcessCollision(entity)
+	if Server then
+		local killed
+		if self.blockedDamage > 0 then
+			killed, _ = entity:TakeDamage(self.blockedDamage, nil, nil, nil, nil, 0, self.blockedDamage, kDamageType.Normal)
+		end
+		if not killed then
+			self:MoveToWaypoint(self.lastWaypoint, true)
+		end
+	else
+		//HACK
+		//Clients are not networked the origins of waypoints, so just send the elevator back in time on the client, server updates will straighten the rest out
+		local moveAmount = self:GetMoveAmount(self.destination, self:GetSpeed() * -1, 0.2)
+		self:SetOrigin(self:GetOrigin() + moveAmount)
+	end
+end
 
-    PROFILE("ControlledMoveable:MoveObjectToTarget")
-	
+function ControlledMoveable:GetMoveAmount(endPoint, moveSpeed, deltaTime)
+
 	local deltaVector = endPoint - self:GetOrigin()
-	local moveVector = GetNormalizedVector(deltaVector) * (time * movespeed)
+	local moveVector = GetNormalizedVector(deltaVector) * (deltaTime * moveSpeed)
 	
 	//When we get really close, dont overshoot.
 	if moveVector:GetLength() > deltaVector:GetLength() then
 		moveVector = deltaVector
 	end
 	
-	self:SetOrigin(self:GetOrigin() + moveVector)
+	return moveVector
+end
+
+function ControlledMoveable:MoveObjectToTarget(endPoint, moveSpeed, deltaTime)
+
+	local moveAmount = self:GetMoveAmount(endPoint, moveSpeed, deltaTime)
+	local origin = self:GetOrigin()
+	
+	//Moveables DGAF, just go unless something tells us to stop.
+	self:SetOrigin(origin + moveAmount)
 
 	if (self:GetOrigin() - endPoint):GetLength() < 0.01 then
 		self:OnWaypointReached()
 	end
-	
-	return moveVector
     
 end
 
 function ControlledMoveable:OnUpdate(deltaTime)
 
     PROFILE("ControlledMoveable:OnUpdate")
-	ScriptActor.OnUpdate(self, deltaTime)
-	self:OnUpdateMoveable(deltaTime)
 	
-end
-
-function ControlledMoveable:OnUpdateMoveable(deltaTime)
-
-    PROFILE("ControlledMoveable:OnUpdateMoveable")
+	ScriptActor.OnUpdate(self, deltaTime)
+	
 	if self:GetIsMoving() then
-		local dV = self:MoveObjectToTarget(self.destination, self:GetSpeed(), deltaTime)
-		self:OnUpdatePlayers(dV, deltaTime)
+		self:MoveObjectToTarget(self.destination, self:GetSpeed(), deltaTime)
 	end
-
+	
 end
 
 function ControlledMoveable:OnUpdateAnimationInput(modelMixin)
