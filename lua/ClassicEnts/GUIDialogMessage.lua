@@ -40,24 +40,26 @@ local kBackgroundHeight = GUICorrectedScale(5)
 local kBackgroundTopHeight = 20
 local kBackgroundBottomHeight = 20
 local kBackgroundXOffset = GUICorrectedScale(20)
-local kBackgroundColor = Color(1,1,1,0)
+local kBackgroundColor = Color(1, 1, 1, 0)
 
 local kTextXOffset = GUICorrectedScale(30)
 local kTextYOffset = GUICorrectedScale(17)
-local kTextMaxHeight = 100
 local kTextFont = Fonts.kAgencyFB_Medium
 
 function GUIDialogMessage:Initialize()
 
     self.textureName = kMarineBackgroundTexture
+	self.isAlien = false
     if PlayerUI_IsOnAlienTeam() then
         self.textureName = kAlienBackgroundTexture
+		self.isAlien = true
     end
 
     self:InitializeBackground()
     self:InitializeTextObject()
     self.timeLastData = 0
 	self.displayTime = 0
+	self.backGroundAlpha = 0
 	
 end
 
@@ -87,8 +89,6 @@ function GUIDialogMessage:InitializeBackground()
 	self.backgroundBottom:SetColor(kBackgroundColor)
 	self.backgroundCenter:AddChild(self.backgroundBottom)
     GUISetTextureCoordinatesTable(self.backgroundBottom, kBackgroundBottomCoords)
-	
-	self.backGroundColor = kBackgroundColor
 
 end
 
@@ -116,11 +116,19 @@ function GUIDialogMessage:Uninitialize()
     
 end
 
-function GUIDialogMessage:SetBackgroundColor(color)
+function GUIDialogMessage:SetBackgroundColor(alpha)
 
-    self.backgroundTop:SetColor(color)
-    self.backgroundCenter:SetColor(color)
-    self.backgroundBottom:SetColor(color)
+    self.backgroundTop:SetColor(Color(1, 1, 1, alpha))
+    self.backgroundCenter:SetColor(Color(1, 1, 1, alpha))
+    self.backgroundBottom:SetColor(Color(1, 1, 1, alpha))
+
+end
+
+function GUIDialogMessage:SetBackgroundTexture(textureName)
+
+	self.backgroundTop:SetTexture(textureName)
+	self.backgroundCenter:SetTexture(textureName)
+	self.backgroundBottom:SetTexture(textureName)
 
 end
 
@@ -141,13 +149,13 @@ end
 
 function GUIDialogMessage:UpdateDialog(text, displayTime)
 
-    self.backGroundColor.a = 1
+	self.backGroundAlpha = 1
     self.timeLastData = Shared.GetTime()
 	self.displayTime = displayTime
 	
 	local wrappedText = WordWrap(self.text, text, 0, kBackgroundWidth - (kTextXOffset * 2))
 	self.text:SetText(wrappedText)
-	self:SetBackgroundColor(self.backGroundColor)
+	self:SetBackgroundColor(self.backGroundAlpha)
     local adjustedHeight = math.max(kBackgroundHeight + self.text:GetTextHeight(wrappedText) - (kBackgroundTopHeight - kBackgroundBottomHeight), 0)
 	//Top and Bottom fixed for rounded texture edges, scale inside piece according to text size.
     self.backgroundCenter:SetSize(Vector(kBackgroundWidth, adjustedHeight, 0))
@@ -156,34 +164,37 @@ end
 
 function GUIDialogMessage:Update(deltaTime)
 
+	PROFILE("GUIDialogMessage:Update")
+
 	//Fades out after displayTime.
-    if PlayerUI_IsACommander() then
-    
-		if self.backGroundColor then
-			self.backGroundColor.a = 0
-			self:SetBackgroundColor(self.backGroundColor)
-		end
-        
-    else
+	if self.backGroundAlpha > 0 then
+	
+		if PlayerUI_IsACommander() then
+		
+			self.backGroundAlpha = 0
+			self:SetBackgroundColor(self.backGroundAlpha)
+			
+		else
 
-        if self.timeLastData + self.displayTime < Shared.GetTime() then
+			if self.timeLastData + self.displayTime < Shared.GetTime() then
 
-			if self.backGroundColor then
-				self.backGroundColor.a = math.max(0, self.backGroundColor.a - deltaTime)
-				self:SetBackgroundColor(self.backGroundColor)
+				self.backGroundAlpha = math.max(0, self.backGroundAlpha - deltaTime)
+				self:SetBackgroundColor(self.backGroundAlpha)
+
 			end
-
-        end
-        
-        self.textureName = kMarineBackgroundTexture
-        if PlayerUI_IsOnAlienTeam() then
-            self.textureName = kAlienBackgroundTexture
-        end
-
-        self.backgroundTop:SetTexture(self.textureName)
-        self.backgroundCenter:SetTexture(self.textureName)
-        self.backgroundBottom:SetTexture(self.textureName)
-    
-    end
-
+			
+			
+			local isAlien = PlayerUI_IsOnAlienTeam()
+			if isAlien and not self.isAlien then
+				self.textureName = kAlienBackgroundTexture
+				self:SetBackgroundTexture(self.textureName)
+			elseif not isAlien and self.isAlien then
+				self.textureName = kMarineBackgroundTexture
+				self:SetBackgroundTexture(self.textureName)
+			end
+		
+		end
+		
+	end
+	
 end
