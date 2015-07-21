@@ -91,6 +91,7 @@ function BreakableEmitter:OnInitialized()
 		InitMixin(self, EEMMixin)
 		
 		self:AddTimedCallback(function(self) self:UpdateScaledModelPathingMesh() end, 1)
+		//This is needed to prevent stomp from damaging through breakables, but causes issues with the breakable taking damage :/
 		//self:AddTimedCallback(function(self) self:AddAdditionalPhysicsModel() end, 1)
 		
 	elseif Client then
@@ -168,7 +169,7 @@ if Server then
 	end
 	
 	function BreakableEmitter:OnDestroy()
-		self:CleanupPhysicsModelAdder()
+		self:CleanupAdditionalPhysicsModel()
 		ScriptActor.OnDestroy(self)
 	end
 	
