@@ -84,7 +84,7 @@ function ControlledPusher:OnTriggerEntered(enterEnt, triggerEnt)
 
     if self:CanPushEntity(enterEnt) then
 		
-		enterEnt:SetBaseVelocity(self.direction * self.force)
+		enterEnt:SetBaseVelocity(self.direction * self.force, true)
 		enterEnt.pushTime = Shared.GetTime()
 		
     end
