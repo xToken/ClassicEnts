@@ -122,7 +122,7 @@ local kTeleportClassNames =
 }
 
 function ControlledTeleporter:CanTeleportEntity(entity)
-	if not self.exitOnly and self:GetIsEnabled() and self.timeLastTeleport + self:GetCooldown() < Shared.GetTime() then
+	if not self.exitOnly and self:GetIsEnabled() and self.timeLastTeleport + self:GetCooldown() < Shared.GetTime() and entity then
 		local className = entity:GetClassName()
 		if table.contains(kTeleportClassNames, className) then
 			if self:GetAllowedTeam() == 0 or (entity.GetTeamNumber and entity:GetTeamNumber() == self:GetAllowedTeam()) then
@@ -131,6 +131,12 @@ function ControlledTeleporter:CanTeleportEntity(entity)
 		end
 	end
 	return false
+end
+
+function ControlledTeleporter:OnSetEnabled(enabled)
+	if enabled then
+		self:ForEachEntityInTrigger(self.OnTriggerEntered)
+	end
 end
 
 function ControlledTeleporter:OnTriggerEntered(enterEnt, triggerEnt)
