@@ -138,11 +138,13 @@ function ControlledWeldableEmitter:Reset()
 	self:SetHealth(1)
 end
 
-function ControlledWeldableEmitter:OnSetEnabled(enabled)
-	//This entity needs to reset for everything to work, so if something turns in on, be sure.
-	self.welded = 0
-	self.weldedTime = 0
-	self:SetHealth(1)
+function ControlledWeldableEmitter:OnSetEnabled()
+	if enabled then
+		//This entity needs to reset for everything to work, so if something turns in on, be sure.
+		self.welded = 0
+		self.weldedTime = 0
+		self:SetHealth(1)
+	end
 end
 
 function ControlledWeldableEmitter:GetWeldTime()

@@ -56,7 +56,7 @@ end
 function ControlledMixin:SetIsEnabled(enabled)
 	assert(type(enabled) == "boolean")
     self.enabled = enabled
-	if enabled and self.OnSetEnabled then
-		self:OnSetEnabled()
+	if self.OnSetEnabled then
+		self:OnSetEnabled(enabled)
 	end
 end

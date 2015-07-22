@@ -79,10 +79,12 @@ function ControlledTimedEmitter:Reset()
 	self.lastUpdate = Shared.GetTime()
 end
 
-function ControlledTimedEmitter:OnSetEnabled(enabled)
-	//This entity needs to reset for everything to work, so if something turns in on, be sure.
-	self.totalTime = 0
-	self.lastUpdate = Shared.GetTime()
+function ControlledTimedEmitter:OnSetEnabled()
+	if enabled then
+		//This entity needs to reset for everything to work, so if something turns in on, be sure.
+		self.totalTime = 0
+		self.lastUpdate = Shared.GetTime()
+	end
 end
 
 function ControlledTimedEmitter:GetEmitTime()
