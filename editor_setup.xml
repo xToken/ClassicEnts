@@ -1142,7 +1142,7 @@
 		<parameter name="disableOnNotify" type="boolean" label="Disable on Notify" help="If true, this object will be disabled on receiving a signal.  Only used by Doors for automatic open/close" default="false"/>
 		<parameter name="enableOnNotify" type="boolean" label="Enable on Notify" help="If true, this object will be enabled on receiving a signal.  Only used by Doors for automatic open/close" default="false"/>
 		<parameter name="name" label="Name" type="string" help="The name of this Moveable Object - Controls Waypoints." default="ReplaceMe" />
-		<parameter name="speed" type="integer" label="Speed" help="Controls how fast this object moves." default="10" />
+		<parameter name="speed" type="real" label="Speed" help="Controls how fast this object moves." default="10" />
 		<parameter name="open" type="boolean" label="Open" help="Controls if this object starts Opened or Closed (Only Doors and Gates)" default="false"/>
 		<parameter name="detectionRadius" type="integer" label="Detection Radius" help="Determines how close an entity needs to get before a door will automatically open for it." default="10"/>
 		<parameter name="blockedDamage" type="integer" label="Blocked Damage" help="How much damage the moveable deals if blocked.  This damage is dealt once only when blocked." default="1"/>
@@ -1226,14 +1226,26 @@
     </class>
 	
 	<class name="controlled_pusher">
-	
+		
+		<parent>trigger</parent>
 		<parent>signal_listener</parent>
-        <parent>trigger</parent>
         
 		<parameter name="enabled" type="boolean" label="Enabled" help="If this object starts enabled." default="true"/>
 		<parameter name="disableOnNotify" type="boolean" label="Disable on Notify" help="If true, this object will be disabled on receiving a signal." default="false"/>
 		<parameter name="enableOnNotify" type="boolean" label="Enable on Notify" help="If true, this object will be enabled on receiving a signal." default="false"/>
-        <parameter name="force" type="integer" label="Force" help="How much force the player is pushed with." default="50"/>
+        <parameter name="force" type="real" label="Force" help="How much force the player is pushed with." default="10"/>
+		
+    </class>
+	
+	<class name="controlled_conveyor">
+	
+		<parent>trigger</parent>
+		<parent>signal_listener</parent>
+        
+		<parameter name="enabled" type="boolean" label="Enabled" help="If this object starts enabled." default="true"/>
+		<parameter name="disableOnNotify" type="boolean" label="Disable on Notify" help="If true, this object will be disabled on receiving a signal." default="false"/>
+		<parameter name="enableOnNotify" type="boolean" label="Enable on Notify" help="If true, this object will be enabled on receiving a signal." default="false"/>
+        <parameter name="speed" type="real" label="Speed" help="How fast the conveyor moves." default="5"/>
 		
     </class>
 	
@@ -1242,7 +1254,7 @@
 		<parent>signal_listener</parent>
         
         <model>
-            <file>models/system/editor/sound_reverb.model</file>
+            <file>models/system/editor/waypoint.model</file>
         </model>
         
 		<parameter name="functionOperation" type="integer" label="Function Operation" help="The function called when this is triggered." default="0"/>
@@ -1257,6 +1269,16 @@
         
         <parameter name="moveableName" type="string" label="Moveable Name" help="The name of the moveable object which uses these points." default="ReplaceMe" />
 		<parameter name="number" type="integer" label="Number" help="The number this waypoint is in the chain." default="1"/>
+        
+    </class>
+	
+	<class name="lua_loader">
+            
+        <model>
+            <file>models/system/editor/waypoint.model</file>
+        </model>
+        
+        <parameter name="luaFile" type="file" label="Lua File" filter="*.lua"/>
         
     </class>
 	

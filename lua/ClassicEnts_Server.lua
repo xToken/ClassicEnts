@@ -54,6 +54,12 @@ end
 
 local oldGetLoadEntity = GetLoadEntity
 function GetLoadEntity(mapName, groupName, values)
+	if mapName == "lua_loader" or mapName == "logic_lua" then
+		if values["luaFile"] and GetFileExists(values["luaFile"]) then
+			Script.Load(values["luaFile"])
+		end
+		return false
+	end
 	//Check translation table
 	if kMapNameTranslationTable[mapName] then
 		//DumpServerEntity(mapName, groupName, values)

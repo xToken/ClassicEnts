@@ -8,7 +8,7 @@
 Script.Load("lua/ClassicEnts_Shared.lua")
 Script.Load("lua/ClassicEnts/GUIHooks.lua")
 
-local kInterceptClasses = 
+local kDialogClasses = 
 {
 	"logic_dialogue",
 	"logic_worldtooltip",
@@ -17,7 +17,7 @@ local kInterceptClasses =
 
 local oldLoadMapEntity = LoadMapEntity
 function LoadMapEntity(className, groupName, values)
-	if table.contains(kInterceptClasses, className) then
+	if table.contains(kDialogClasses, className) then
 		local dialog = values["dialogText"]
 		if className == "logic_dialogue" then
 			dialog = values["text"]
@@ -29,9 +29,15 @@ function LoadMapEntity(className, groupName, values)
 		else
 			Shared.Message("Dialog entity with invalid display text field!")
 		end
-	else
-		oldLoadMapEntity(className, groupName, values)
+		return true
 	end
+	if className == "lua_loader" or className == "logic_lua" then
+		if values["luaFile"] and GetFileExists(values["luaFile"]) then
+			Script.Load(values["luaFile"])
+		end
+		return true
+	end
+	return oldLoadMapEntity(className, groupName, values)
 end
 
 local function SetupGUIMinimap()
