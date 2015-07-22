@@ -15,13 +15,13 @@ class 'ControlledPusher' (Trigger)
 ControlledPusher.kMapName = "controlled_pusher"
 
 local kDefaultForce = 50
-local kPushPlayerCooldown = 2
+local kPushPlayerCooldown = 0.3
 local kVerticleScalar = 1.2 //EEM used to move player up a bit, use this to account for that.
 
 local networkVars = 
 { 
 	direction = "vector",
-	force = "integer"
+	force = "float"
 }
 
 //Maintain Compat with EEM
@@ -31,8 +31,8 @@ local function AnglesToVector(angles)
         direction.z = math.cos(angles.pitch)
         direction.y = -math.sin(angles.pitch) * kVerticleScalar
         if angles.yaw ~= 0 then
-            direction.x = direction.z * math.sin(angles.yaw)                   
-            direction.z = direction.z * math.cos(angles.yaw)                                
+            direction.x = direction.z * math.sin(angles.yaw)
+            direction.z = direction.z * math.cos(angles.yaw)
         end  
     end
     return direction
@@ -74,10 +74,16 @@ function ControlledPusher:GetIsMapEntity()
 end
 
 function ControlledPusher:CanPushEntity(entity)
-	if self:GetIsEnabled() and entity:isa("Player") and HasMixin(entity, "Moveable") and entity:GetIsAlive() and entity.pushTime + kPushPlayerCooldown < Shared.GetTime() then
+	if self:GetIsEnabled() and entity and entity:isa("Player") and HasMixin(entity, "Moveable") and entity:GetIsAlive() and entity.pushTime + kPushPlayerCooldown < Shared.GetTime() then
 		return true
 	end
 	return false
+end
+
+function ControlledPusher:OnSetEnabled(enabled)
+	if enabled then
+		self:ForEachEntityInTrigger(self.OnTriggerEntered)
+	end
 end
 
 function ControlledPusher:OnTriggerEntered(enterEnt, triggerEnt)
