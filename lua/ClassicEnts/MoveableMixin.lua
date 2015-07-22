@@ -17,7 +17,7 @@ MoveableMixin.networkVars =
 function MoveableMixin:__initmixin()
 	if Server then
 		self:ClearBaseVelocity()
-        self.onMoveable = true
+        self.onMoveable = false
 	end
 end
 
@@ -76,7 +76,7 @@ function MoveableMixin:ModifyVelocity(input, velocity, deltaTime)
 					end
 				end
 				if blockedMove then
-					moveable:OnProcessCollision(self)
+					moveable:OnProcessCollision(self, 1)
 					self:SetOnMoveable(false)
 				end
 			end
@@ -91,9 +91,15 @@ function MoveableMixin:IsPlayerOnMoveable()
 
 	PROFILE("MoveableMixin:IsPointOnMoveable")
 	
-    local point = self:GetOrigin()
+	local pHeight = self:GetExtents().y * 2
+	//Special case the onos..
+	if self:isa("Onos") then
+		pHeight = 3.0
+	end
+    local point = self:GetOrigin() + Vector(0, pHeight, 0)
 	local onMoveable = nil
-    local trace = Shared.TraceRay(Vector(point.x, point.y + 2, point.z), Vector(point.x, point.y - 6, point.z), CollisionRep.Move, PhysicsMask.AllButPCs, EntityFilterOne(self))
+	//This is critical for allowing players to block moveables, trace must start at headlevel
+    local trace = Shared.TraceRay(point, Vector(point.x, point.y - (pHeight + 2), point.z), CollisionRep.Move, PhysicsMask.AllButPCs, EntityFilterOne(self))
     if trace.fraction ~= 1 and trace.entity ~= nil and trace.entity:isa("ControlledMoveable") then
 		onMoveable = trace.entity
 	end
