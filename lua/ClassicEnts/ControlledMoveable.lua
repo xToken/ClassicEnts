@@ -27,6 +27,29 @@ ControlledMoveable.kObjectTypes = enum( {'Door', 'Elevator', 'Gate'} )
 local kUpdateAutoOpenRate = 0.3
 local kMaxDetectionRadius = 25
 local kControllerScale = 0.75
+local kNonPlayerDamageScale = 10
+local kCollideTypes = 
+{
+	"ARC",
+	"Armory",
+	"ArmsLab",
+	"Crag",
+	"Egg",
+	"Hydra",
+	"InfantryPortal",
+	"Observatory",
+	"PhaseGate",
+	"PrototypeLab",
+	"ResourceTower",
+	"RoboticsFactory",
+	"Sentry",
+	"SentryBattery",
+	"Shade",
+	"Shift",
+	"Spur",
+	"TunnelEntrance",
+	"Veil"
+}
 
 //These objects support basic interations/triggering, but not pausing once started.  
 //Doors open/close automatically, are enabled/disabled accordingly when triggered.
@@ -36,7 +59,7 @@ local kControllerScale = 0.75
 local networkVars = 
 {
 	moving = "boolean",
-	speed = "integer",
+	speed = "float",
 	destination = "vector",
 	objectType = "enum ControlledMoveable.kObjectTypes",
 	blockedDamage = "integer",
@@ -271,21 +294,23 @@ function ControlledMoveable:OnWaypointReached()
 	
 end
 
-function ControlledMoveable:OnProcessCollision(entity)
+function ControlledMoveable:OnProcessCollision(entity, damageScale)
 	if Server then
-		local killed
+		local killed = false
 		if self.blockedDamage > 0 then
-			killed, _ = entity:TakeDamage(self.blockedDamage, nil, nil, nil, nil, 0, self.blockedDamage, kDamageType.Normal)
+			killed, _ = entity:TakeDamage(self.blockedDamage * damageScale, nil, nil, nil, nil, 0, self.blockedDamage * damageScale, kDamageType.Normal)
 		end
 		if not killed then
 			self:MoveToWaypoint(self.lastWaypoint, true)
+			return false
 		end
 	else
 		//HACK
-		//Clients are not networked the origins of waypoints, so just send the elevator back in time on the client, server updates will straighten the rest out
+		//Clients are not networked waypoints, so just send the elevator back in time on the client, server updates will straighten the rest out
 		local moveAmount = self:GetMoveAmount(self.destination, self:GetSpeed() * -1, 0.2)
 		self:SetOrigin(self:GetOrigin() + moveAmount)
 	end
+	return true
 end
 
 function ControlledMoveable:GetMoveAmount(endPoint, moveSpeed, deltaTime)
@@ -307,6 +332,23 @@ function ControlledMoveable:MoveObjectToTarget(endPoint, moveSpeed, deltaTime)
 	local origin = self:GetOrigin()
 	
 	//Moveables DGAF, just go unless something tells us to stop.
+	//Elevators should check for non-player entities that might block us
+	if self:GetInfluencesMovement() then
+		if not self.traceExtents then
+			local s = self:GetModelScale()
+			local e = self:GetModelExtentsVector()
+			self.traceExtents = Vector(s.x * e.x * kControllerScale, s.y * e.y * kControllerScale, s.z * e.z * kControllerScale)
+		end
+		local trace = Shared.TraceBox(self.traceExtents, origin, origin + moveAmount, CollisionRep.Default, PhysicsMask.AllButPCs, EntityFilterOneAndIsa(self, "Player"))
+        if trace.entity and HasMixin(trace.entity, "Live") and table.contains(kCollideTypes, trace.entity:GetClassName()) then
+			//Should we only collide with certain things or things which take structural damage atm?
+			if not self:OnProcessCollision(trace.entity, kNonPlayerDamageScale) then
+				//Changing direction, dont run rest of move.
+				return
+			end
+		end
+	end
+	
 	self:SetOrigin(origin + moveAmount)
 
 	if (self:GetOrigin() - endPoint):GetLength() < 0.01 then
