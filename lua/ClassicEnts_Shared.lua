@@ -7,6 +7,7 @@
 
 Script.Load("lua/ClassicEnts/BreakableEmitter.lua")
 Script.Load("lua/ClassicEnts/ControlledButtonEmitter.lua")
+Script.Load("lua/ClassicEnts/ControlledConveyor.lua")
 Script.Load("lua/ClassicEnts/ControlledMoveable.lua")
 Script.Load("lua/ClassicEnts/ControlledWeldableEmitter.lua")
 Script.Load("lua/ClassicEnts/ControlledDialogListener.lua")
