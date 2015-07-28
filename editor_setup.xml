@@ -1142,7 +1142,7 @@
 		<parameter name="disableOnNotify" type="boolean" label="Disable on Notify" help="If true, this object will be disabled on receiving a signal.  Only used by Doors for automatic open/close" default="false"/>
 		<parameter name="enableOnNotify" type="boolean" label="Enable on Notify" help="If true, this object will be enabled on receiving a signal.  Only used by Doors for automatic open/close" default="false"/>
 		<parameter name="name" label="Name" type="string" help="The name of this Moveable Object - Controls Waypoints." default="ReplaceMe" />
-		<parameter name="speed" type="real" label="Speed" help="Controls how fast this object moves." default="10" />
+		<parameter name="realSpeed" type="real" label="Speed" help="Controls how fast this object moves." default="10" />
 		<parameter name="open" type="boolean" label="Open" help="Controls if this object starts Opened or Closed (Only Doors and Gates)" default="false"/>
 		<parameter name="detectionRadius" type="integer" label="Detection Radius" help="Determines how close an entity needs to get before a door will automatically open for it." default="10"/>
 		<parameter name="blockedDamage" type="integer" label="Blocked Damage" help="How much damage the moveable deals if blocked.  This damage is dealt once only when blocked." default="1"/>
@@ -1233,7 +1233,7 @@
 		<parameter name="enabled" type="boolean" label="Enabled" help="If this object starts enabled." default="true"/>
 		<parameter name="disableOnNotify" type="boolean" label="Disable on Notify" help="If true, this object will be disabled on receiving a signal." default="false"/>
 		<parameter name="enableOnNotify" type="boolean" label="Enable on Notify" help="If true, this object will be enabled on receiving a signal." default="false"/>
-        <parameter name="force" type="real" label="Force" help="How much force the player is pushed with." default="10"/>
+        <parameter name="realforce" type="real" label="Force" help="How much force the player is pushed with." default="10"/>
 		
     </class>
 	
@@ -1245,7 +1245,7 @@
 		<parameter name="enabled" type="boolean" label="Enabled" help="If this object starts enabled." default="true"/>
 		<parameter name="disableOnNotify" type="boolean" label="Disable on Notify" help="If true, this object will be disabled on receiving a signal." default="false"/>
 		<parameter name="enableOnNotify" type="boolean" label="Enable on Notify" help="If true, this object will be enabled on receiving a signal." default="false"/>
-        <parameter name="speed" type="real" label="Speed" help="How fast the conveyor moves." default="5"/>
+        <parameter name="realforce" type="real" label="Force" help="How much force the player is pushed with." default="50"/>
 		
     </class>
 	

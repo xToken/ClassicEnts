@@ -63,6 +63,11 @@ function ControlledPusher:OnInitialized()
 		InitMixin(self, EEMMixin)
 		self.direction = AnglesToVector(self:GetAngles())
 		
+		//Editor wont allow redefining a property with the same name without crashing :/
+		if self.realForce ~= nil then
+			self.force = self.realForce
+		end
+		
 	end
 	
 	self:SetTriggerCollisionEnabled(true)

@@ -54,6 +54,11 @@ function ControlledConveyor:OnInitialized()
 	
 	if Server then
 		self.direction = RotationToDirection(self:GetAngles())
+		
+		//Editor wont allow redefining a property with the same name without crashing :/
+		if self.realForce ~= nil then
+			self.force = self.realForce
+		end
 	end
 	
 	self:SetTriggerCollisionEnabled(true)

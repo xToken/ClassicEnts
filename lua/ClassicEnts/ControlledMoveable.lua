@@ -174,6 +174,11 @@ function ControlledMoveable:OnInitialized()
 		
 		self.detectionRadius = Clamp(self.detectionRadius, 1, kMaxDetectionRadius)
 		
+		//Editor wont allow redefining a property with the same name without crashing :/
+		if self.realSpeed ~= nil then
+			self.speed = self.realSpeed
+		end
+		
 	end
 	
 	InitMixin(self, ScaleModelMixin)
