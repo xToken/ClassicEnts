@@ -7,6 +7,8 @@
 
 Script.Load("lua/ClassicEnts_Shared.lua")
 Script.Load("lua/ClassicEnts/GUIHooks.lua")
+Script.Load("lua/ClassicEnts/Elixer_Utility.lua")
+Elixer.UseVersion( 1.8 )
 
 local kDialogClasses = 
 {
@@ -41,10 +43,10 @@ function LoadMapEntity(className, groupName, values)
 end
 
 local function SetupGUIMinimap()
-	local kBlipInfo 		= GHook:GetUpValue( GUIMinimap.Initialize,   "kBlipInfo" )
-	local kBlipColorType 	= GHook:GetUpValue( GUIMinimap.Initialize,   "kBlipColorType" )
-	local kBlipSizeType 	= GHook:GetUpValue( GUIMinimap.Initialize,   "kBlipSizeType" )
-	local kStaticBlipsLayer = GHook:GetUpValue( GUIMinimap.Initialize,   "kStaticBlipsLayer" )
+	local kBlipInfo 		= GetUpValue( GUIMinimap.Initialize, "kBlipInfo", { LocateRecurse = true } )
+	local kBlipColorType 	= GetUpValue( GUIMinimap.Initialize, "kBlipColorType", { LocateRecurse = true } )
+	local kBlipSizeType 	= GetUpValue( GUIMinimap.Initialize, "kBlipSizeType", { LocateRecurse = true } )
+	local kStaticBlipsLayer = GetUpValue( GUIMinimap.Initialize, "kStaticBlipsLayer", { LocateRecurse = true } )
 	kBlipInfo[kMinimapBlipType.ControlledWeldableEmitter] = { kBlipColorType.Waypoint, kBlipSizeType.UnpoweredPowerPoint, kStaticBlipsLayer }
 end
 

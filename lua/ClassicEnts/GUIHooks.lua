@@ -25,29 +25,6 @@ local kPostHookedScripts = { }
 local kGUIPreOverrides = { }
 local kGUIPostOverrides = { }
 
-function GHook:GetUpValue(origfunc, name)
-
-	local index = 1
-	local foundValue = nil
-	while true do
-	
-		local n, v = debug.getupvalue(origfunc, index)
-		if not n then
-			break
-		end
-		
-		if n == name then
-			foundValue = v
-		end
-		
-		index = index + 1
-		
-	end
-	
-	return foundValue
-	
-end
-
 function GHook:AddPreInitOverride(scriptname, func)
 	if kGUIPreOverrides[scriptname] == nil then
 		kGUIPreOverrides[scriptname] = { }
