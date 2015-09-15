@@ -53,8 +53,8 @@ function ControlledButtonEmitter:OnCreate()
 	//SignalMixin sets this on init, but I need to confirm its set on ent.
 	self.listenChannel = nil
 	self:SetUpdates(false)
-	self:SetRelevancyDistance(kMaxRelevancyDistance)
 	
+	self.commVisible = true
 	self.timeLastUsed = 0
 	self.cooldown = 0
 	self.allowedTeam = 0
@@ -80,6 +80,13 @@ function ControlledButtonEmitter:OnInitialized()
         end
 	
 		InitMixin(self, EEMMixin)
+		
+		local mask = bit.bor(kRelevantToTeam1Unit, kRelevantToTeam2Unit, kRelevantToReadyRoom)
+		if self.commVisible then
+			mask = bit.bor(mask, kRelevantToTeam1Commander, kRelevantToTeam2Commander)
+		end
+		self:SetExcludeRelevancyMask( mask )
+		self:SetRelevancyDistance(kMaxRelevancyDistance)
 
 	end
 

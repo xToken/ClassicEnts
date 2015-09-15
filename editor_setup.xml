@@ -1082,6 +1082,7 @@
         <parameter name="model" type="file" label="Model" filter="*.model"/>
 		<parameter name="cinematicName" type="file" label="Cinematic file" default="" filter="*.cinematic" help="Name of cinematic file (created with Cinematic Editor)"/>
 		<parameter name="health" type="real" label="Health before dying" default="1.0"/>
+		<parameter name="commVisible" type="boolean" label="Commander Visible" help="Set to false to make entity not visible to comm." default="true"/>
 		<parameter name="emitChannel" type="integer" label="Emit channel" help="Only entities listening on this channel will receive the message." default="0"/>
         <parameter name="emitMessage" type="string" label="Emit message" help="The listening entity must respond to this message." default="" />
         <parameter name="allowedTeam" type="choice" label="Team which can break this." default="0">
@@ -1113,6 +1114,7 @@
 		<parameter name="enableOnNotify" type="boolean" label="Enable on Notify" help="If true, this object will be enabled on receiving a signal." default="false"/>
 		<parameter name="emitChannel" type="integer" label="Emit channel" help="Only entities listening on this channel will receive the message." default="0"/>
         <parameter name="emitMessage" type="string" label="Emit message" help="The listening entity must respond to this message." default="" />
+		<parameter name="commVisible" type="boolean" label="Commander Visible" help="Set to false to make entity not visible to comm." default="true"/>
 		<parameter name="cooldown" type="integer" label="Cooldown" help="Controls the amount of time between uses." default="1" />
         <parameter name="allowedTeam" type="choice" label="Allowed Team Number" default="0">
             <choice label="Any Team" value="0"/>
@@ -1142,6 +1144,7 @@
 		<parameter name="disableOnNotify" type="boolean" label="Disable on Notify" help="If true, this object will be disabled on receiving a signal.  Only used by Doors for automatic open/close" default="false"/>
 		<parameter name="enableOnNotify" type="boolean" label="Enable on Notify" help="If true, this object will be enabled on receiving a signal.  Only used by Doors for automatic open/close" default="false"/>
 		<parameter name="name" label="Name" type="string" help="The name of this Moveable Object - Controls Waypoints." default="ReplaceMe" />
+		<parameter name="commVisible" type="boolean" label="Commander Visible" help="Set to false to make entity not visible to comm." default="true"/>
 		<parameter name="realSpeed" type="real" label="Speed" help="Controls how fast this object moves." default="10" />
 		<parameter name="open" type="boolean" label="Open" help="Controls if this object starts Opened or Closed (Only Doors and Gates)" default="false"/>
 		<parameter name="detectionRadius" type="integer" label="Detection Radius" help="Determines how close an entity needs to get before a door will automatically open for it." default="10"/>
@@ -1194,6 +1197,7 @@
 		<parameter name="enableOnNotify" type="boolean" label="Enable on Notify" help="If true, this object will be enabled on receiving a signal." default="false"/>
 		<parameter name="emitChannel" type="integer" label="Emit channel" help="Only entities listening on this channel will receive the message." default="0"/>
         <parameter name="emitMessage" type="string" label="Emit message" help="The listening entity must respond to this message." default="" />
+		<parameter name="commVisible" type="boolean" label="Commander Visible" help="Set to false to make entity not visible to comm." default="true"/>
 		<parameter name="timeToWeld" type="integer" label="Time to Weld" help="Controls how long this entity takes to weld." default="10"/>
 		<parameter name="weldTimeScales" type="boolean" label="Scale Weld Time with Team Size" help="Scales timeToWeld based on player count." default="false"/>
 		<parameter name="teamNumber" type="choice" label="Team Number" default="1">

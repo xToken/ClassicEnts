@@ -59,9 +59,9 @@ function BreakableEmitter:OnCreate()
 	//SignalMixin sets this on init, but I need to confirm its set on ent.
 	self.listenChannel = nil
 	self.allowedTeam = 0
+	self.commVisible = true
 	self.breakableSurface = kBreakableSurfaceEnum.metal
 	self:SetUpdates(false)
-	self:SetRelevancyDistance(kMaxRelevancyDistance)
 
 end
 
@@ -94,6 +94,13 @@ function BreakableEmitter:OnInitialized()
 		//This is needed to prevent stomp from damaging through breakables, but causes issues with the breakable taking damage :/
 		//self:AddTimedCallback(function(self) self:AddAdditionalPhysicsModel() end, 1)
 		
+		local mask = bit.bor(kRelevantToTeam1Unit, kRelevantToTeam2Unit, kRelevantToReadyRoom)
+		if self.commVisible then
+			mask = bit.bor(mask, kRelevantToTeam1Commander, kRelevantToTeam2Commander)
+		end
+		self:SetExcludeRelevancyMask( mask )
+		self:SetRelevancyDistance(kMaxRelevancyDistance)
+		
 	elseif Client then
         InitMixin(self, UnitStatusMixin)
 	end
@@ -114,10 +121,6 @@ function BreakableEmitter:OnInitialized()
 	InitMixin(self, ScaleModelMixin)
 	InitMixin(self, GameWorldMixin)
 	
-end
-
-function BreakableEmitter:Reset()
-	//These should get re-created regardless now.
 end
 
 function BreakableEmitter:GetSendDeathMessageOverride()
@@ -172,8 +175,10 @@ if Server then
 		self:CleanupAdditionalPhysicsModel()
 		ScriptActor.OnDestroy(self)
 	end
-	
+
 end
+
+
 
 //Breakables are ALWAYS MY ENEMY!
 local oldGetAreEnemies = GetAreEnemies

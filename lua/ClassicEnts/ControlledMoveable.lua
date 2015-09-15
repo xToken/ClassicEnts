@@ -123,6 +123,7 @@ function ControlledMoveable:OnCreate()
 		self.objectType = ControlledMoveable.kObjectTypes.Gate
 		self.destination = Vector(0, 0, 0)
 		self.open = false
+		self.commVisible = true
 		self.waypoint = -1
 		self.lastWaypoint = -1
 		self.detectionRadius = DoorMixin.kMaxOpenDistance
@@ -179,6 +180,13 @@ function ControlledMoveable:OnInitialized()
 			self.speed = self.realSpeed
 		end
 		
+		local mask = bit.bor(kRelevantToTeam1Unit, kRelevantToTeam2Unit, kRelevantToReadyRoom)
+		if self.commVisible then
+			mask = bit.bor(mask, kRelevantToTeam1Commander, kRelevantToTeam2Commander)
+		end
+		self:SetExcludeRelevancyMask( mask )
+		self:SetRelevancyDistance(kMaxRelevancyDistance)
+
 	end
 	
 	InitMixin(self, ScaleModelMixin)

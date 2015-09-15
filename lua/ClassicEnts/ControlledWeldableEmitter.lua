@@ -64,8 +64,8 @@ function ControlledWeldableEmitter:OnCreate()
 	
 	//SignalMixin sets this on init, but I need to confirm its set on ent.
 	self.listenChannel = nil	
-	self:SetRelevancyDistance(kMaxRelevancyDistance)
 	
+	self.commVisible = true
 	self.welded = 0
 	self.weldedTime = 0
 
@@ -94,6 +94,13 @@ function ControlledWeldableEmitter:OnInitialized()
 		
 		InitMixin(self, EEMMixin)
 		self:SetTeamNumber(self.teamNumber)
+		
+		local mask = bit.bor(kRelevantToTeam1Unit, kRelevantToTeam2Unit, kRelevantToReadyRoom)
+		if self.commVisible then
+			mask = bit.bor(mask, kRelevantToTeam1Commander, kRelevantToTeam2Commander)
+		end
+		self:SetExcludeRelevancyMask( mask )
+		self:SetRelevancyDistance(kMaxRelevancyDistance)
 		
 	elseif Client then
         InitMixin(self, UnitStatusMixin)
