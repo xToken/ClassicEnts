@@ -51,6 +51,10 @@ local kCollideTypes =
 	"Veil"
 }
 
+function RegisterControlledMoveableColliderClass(className)
+	table.insert(kCollideTypes, className)
+end
+
 //These objects support basic interations/triggering, but not pausing once started.  
 //Doors open/close automatically, are enabled/disabled accordingly when triggered.
 //Elevators pause for a short period at each waypoint before continuing.  Triggering an elevator causes it to move.
