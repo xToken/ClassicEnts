@@ -1,14 +1,11 @@
-// Natural Selection 2 'Classic Entities Mod'
-// Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
-// Designed to work with maps developed for Extra Entities Mod.  
-// Source located at - https://github.com/xToken/ClassicEnts
-// lua\ClassicEnts_Client.lua
-// - Dragon
+-- Natural Selection 2 'Classic Entities Mod'
+-- Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
+-- Designed to work with maps developed for Extra Entities Mod.  
+-- Source located at - https://github.com/xToken/ClassicEnts
+-- lua\ClassicEnts_Client.lua
+-- Dragon
 
 Script.Load("lua/ClassicEnts_Shared.lua")
-Script.Load("lua/ClassicEnts/GUIHooks.lua")
-Script.Load("lua/ClassicEnts/Elixer_Utility.lua")
-Elixer.UseVersion( 1.8 )
 
 local kDialogClasses = 
 {
@@ -42,20 +39,24 @@ function LoadMapEntity(className, groupName, values)
 	return oldLoadMapEntity(className, groupName, values)
 end
 
-local function SetupGUIMinimap()
-	local kBlipInfo 		= GetUpValue( GUIMinimap.Initialize, "kBlipInfo", { LocateRecurse = true } )
-	local kBlipColorType 	= GetUpValue( GUIMinimap.Initialize, "kBlipColorType", { LocateRecurse = true } )
-	local kBlipSizeType 	= GetUpValue( GUIMinimap.Initialize, "kBlipSizeType", { LocateRecurse = true } )
-	local kStaticBlipsLayer = GetUpValue( GUIMinimap.Initialize, "kStaticBlipsLayer", { LocateRecurse = true } )
-	kBlipInfo[kMinimapBlipType.ControlledWeldableEmitter] = { kBlipColorType.Waypoint, kBlipSizeType.UnpoweredPowerPoint, kStaticBlipsLayer }
+local function SetupGUIMinimap(name, script)
+	if name == 'GUIMinimapFrame' then
+		local kBlipInfo 		= debug.getupvaluex( GUIMinimap.Initialize, "kBlipInfo", true )
+		local kBlipColorType 	= debug.getupvaluex( GUIMinimap.Initialize, "kBlipColorType", true )
+		local kBlipSizeType 	= debug.getupvaluex( GUIMinimap.Initialize, "kBlipSizeType", true )
+		local kStaticBlipsLayer = debug.getupvaluex( GUIMinimap.Initialize, "kStaticBlipsLayer", true )
+		kBlipInfo[kMinimapBlipType.ControlledWeldableEmitter] = { kBlipColorType.Waypoint, kBlipSizeType.UnpoweredPowerPoint, kStaticBlipsLayer }
+		script:Uninitialize()
+		script:Initialize()
+	end
 end
 
-GHook:AddPreInitOverride("GUIMinimapFrame", SetupGUIMinimap)
+ClientUI.AddScriptCreationEventListener(SetupGUIMinimap)
 
 local oldBuildClassToGrid = BuildClassToGrid
 function BuildClassToGrid()
 	local ClassToGrid = oldBuildClassToGrid()
-	ClassToGrid["ControlledWeldableEmitter"] = { 1, 1 }
+	ClassToGrid["ControlledWeldableEmitter"] = { 7, 1 }
 	return ClassToGrid
 end
 
