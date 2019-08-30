@@ -1,9 +1,9 @@
-// Natural Selection 2 'Classic Entities Mod'
-// Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
-// Designed to work with maps developed for Extra Entities Mod.  
-// Source located at - https://github.com/xToken/ClassicEnts
-// lua\ClassicEnts_Server.lua
-// - Dragon
+-- Natural Selection 2 'Classic Entities Mod'
+-- Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
+-- Designed to work with maps developed for Extra Entities Mod.  
+-- Source located at - https://github.com/xToken/ClassicEnts
+-- lua\ClassicEnts_Server.lua
+-- Dragon
 
 Script.Load("lua/ClassicEnts_Shared.lua")
 Script.Load("lua/ClassicEnts/ControlledTeleporter.lua")
@@ -60,19 +60,19 @@ function GetLoadEntity(mapName, groupName, values)
 		end
 		return false
 	end
-	//Check translation table
+	-- Check translation table
 	if kMapNameTranslationTable[mapName] then
-		//DumpServerEntity(mapName, groupName, values)
+		-- DumpServerEntity(mapName, groupName, values)
 		values["oldMapName"] = mapName
 		mapName = kMapNameTranslationTable[mapName]
 		local entity = Server.CreateEntity(mapName, values)
         if entity then
             entity:SetMapEntity()
-			// Map Entities with LiveMixin can be destroyed during the game.
+			-- Map Entities with LiveMixin can be destroyed during the game.
             if HasMixin(entity, "Live") then
-                //Store values for reset
+                -- Store values for reset
                 table.insert(Server.mapLoadLiveEntityValues, {mapName, groupName, values})
-                //Store ent ID to delete
+                -- Store ent ID to delete
                 table.insert(Server.mapLiveEntities, entity:GetId())
             end
 		end

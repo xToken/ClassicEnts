@@ -1,9 +1,9 @@
-// Natural Selection 2 'Classic Entities Mod'
-// Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
-// Designed to work with maps developed for Extra Entities Mod.  
-// Source located at - https://github.com/xToken/ClassicEnts
-// lua\ClassicEnts\ControlledWeldableEmitter.lua
-// - Dragon
+-- Natural Selection 2 'Classic Entities Mod'
+-- Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
+-- Designed to work with maps developed for Extra Entities Mod.  
+-- Source located at - https://github.com/xToken/ClassicEnts
+-- lua\ClassicEnts\ControlledWeldableEmitter.lua
+-- Dragon
 
 Script.Load("lua/ScriptActor.lua")
 Script.Load("lua/Mixins/ClientModelMixin.lua")
@@ -20,12 +20,12 @@ Script.Load("lua/ClassicEnts/ScaleModelMixin.lua")
 Script.Load("lua/ClassicEnts/ControlledMixin.lua")
 Script.Load("lua/GameEffectsMixin.lua")
 
-//Uses value from ControlledMixin.  teamNumber sets the team which can weld this object.
-//timeToWeld controls how many seconds it takes to weld this for it to trigger.  Once trigger, it emits on emitChannel.  This entity can also
-//be toggled on listenChannel.  resetOnTrigger can be used to control what happens after this is welded.
-//allowHealSpray allows aliens to combat welding and/or trigger this again by 'healing' it.
+-- Uses value from ControlledMixin.  teamNumber sets the team which can weld this object.
+-- timeToWeld controls how many seconds it takes to weld this for it to trigger.  Once trigger, it emits on emitChannel.  This entity can also
+-- be toggled on listenChannel.  resetOnTrigger can be used to control what happens after this is welded.
+-- allowHealSpray allows aliens to combat welding and/or trigger this again by 'healing' it.
 
-//Good default model - models/props/generic/terminals/generic_controlpanel_01.model
+-- Good default model - models/props/generic/terminals/generic_controlpanel_01.model
 
 class 'ControlledWeldableEmitter' (ScriptActor)
 
@@ -62,7 +62,7 @@ function ControlledWeldableEmitter:OnCreate()
 	InitMixin(self, SelectableMixin)
     InitMixin(self, GameEffectsMixin)
 	
-	//SignalMixin sets this on init, but I need to confirm its set on ent.
+	-- SignalMixin sets this on init, but I need to confirm its set on ent.
 	self.listenChannel = nil	
 	
 	self.commVisible = true
@@ -80,14 +80,14 @@ function ControlledWeldableEmitter:OnInitialized()
 		self.modelName = self.model
         
         if self.modelName ~= nil then
-			//These can get re-created midgame, check for precached model
+			-- These can get re-created midgame, check for precached model
 			if Shared.GetModelIndex(self.modelName) == 0 and GetFileExists(self.modelName) then
 				Shared.PrecacheModel(self.modelName)
 			end
             self:SetModel(self.modelName)
         end
 		
-		// This Mixin must be inited inside this OnInitialized() function.
+		-- This Mixin must be inited inside this OnInitialized() function.
         if not HasMixin(self, "MapBlip") then
             InitMixin(self, MapBlipMixin)
         end
@@ -147,7 +147,7 @@ end
 
 function ControlledWeldableEmitter:OnSetEnabled()
 	if enabled then
-		//This entity needs to reset for everything to work, so if something turns in on, be sure.
+		-- This entity needs to reset for everything to work, so if something turns in on, be sure.
 		self.welded = 0
 		self.weldedTime = 0
 		self:SetHealth(1)
@@ -159,7 +159,7 @@ function ControlledWeldableEmitter:GetWeldTime()
 end
 
 function ControlledWeldableEmitter:OnHealSpray()
-    //Hmmm
+    -- Hmmm
 	if Server and self:GetIsEnabled() then
 		local timeSlice = kHealSprayTimeSlice
 		if self.weldTimeScales then

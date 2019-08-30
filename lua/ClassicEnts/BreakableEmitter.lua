@@ -1,9 +1,9 @@
-// Natural Selection 2 'Classic Entities Mod'
-// Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
-// Designed to work with maps developed for Extra Entities Mod.  
-// Source located at - https://github.com/xToken/ClassicEnts
-// lua\ClassicEnts\BreakableEmitter.lua
-// - Dragon
+-- Natural Selection 2 'Classic Entities Mod'
+-- Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
+-- Designed to work with maps developed for Extra Entities Mod.  
+-- Source located at - https://github.com/xToken/ClassicEnts
+-- lua\ClassicEnts\BreakableEmitter.lua
+-- Dragon
 
 Script.Load("lua/ScriptActor.lua")
 Script.Load("lua/ObstacleMixin.lua")
@@ -17,8 +17,8 @@ Script.Load("lua/ClassicEnts/EEMMixin.lua")
 Script.Load("lua/ClassicEnts/ScaleModelMixin.lua")
 Script.Load("lua/ClassicEnts/GameWorldMixin.lua")
 
-//Destroyable entities which are re-created on game reset, can emit on channel when destroyed.
-//Takes health, surface, emitChannel, allowedTeam.  Optionally a cinematicName for onKill
+-- Destroyable entities which are re-created on game reset, can emit on channel when destroyed.
+-- Takes health, surface, emitChannel, allowedTeam.  Optionally a cinematicName for onKill
 
 class 'BreakableEmitter' (ScriptActor)
 
@@ -56,7 +56,7 @@ function BreakableEmitter:OnCreate()
 	InitMixin(self, SelectableMixin)
 	InitMixin(self, ObstacleMixin)
 	
-	//SignalMixin sets this on init, but I need to confirm its set on ent.
+	-- SignalMixin sets this on init, but I need to confirm its set on ent.
 	self.listenChannel = nil
 	self.allowedTeam = 0
 	self.commVisible = true
@@ -74,7 +74,7 @@ function BreakableEmitter:OnInitialized()
 		self.modelName = self.model
         
         if self.modelName ~= nil then
-			//These can get re-created midgame, check for precached model
+			-- These can get re-created midgame, check for precached model
 			if Shared.GetModelIndex(self.modelName) == 0 and GetFileExists(self.modelName) then
 				Shared.PrecacheModel(self.modelName)
 			end
@@ -83,7 +83,7 @@ function BreakableEmitter:OnInitialized()
 		
 		if self.cinematicName and self.cinematicName ~= "" then
 			if Shared.GetCinematicIndex(self.cinematicName) == 0 then
-				//Precache
+				-- Precache
 				Shared.PrecacheCinematic(self.cinematicName)
 			end
 		end
@@ -91,8 +91,8 @@ function BreakableEmitter:OnInitialized()
 		InitMixin(self, EEMMixin)
 		
 		self:AddTimedCallback(function(self) self:UpdateScaledModelPathingMesh() end, 1)
-		//This is needed to prevent stomp from damaging through breakables, but causes issues with the breakable taking damage :/
-		//self:AddTimedCallback(function(self) self:AddAdditionalPhysicsModel() end, 1)
+		-- This is needed to prevent stomp from damaging through breakables, but causes issues with the breakable taking damage :/
+		-- self:AddTimedCallback(function(self) self:AddAdditionalPhysicsModel() end, 1)
 		
 		local mask = bit.bor(kRelevantToTeam1Unit, kRelevantToTeam2Unit, kRelevantToReadyRoom)
 		if self.commVisible then
@@ -180,10 +180,10 @@ end
 
 
 
-//Breakables are ALWAYS MY ENEMY!
+-- Breakables are ALWAYS MY ENEMY!
 local oldGetAreEnemies = GetAreEnemies
 function GetAreEnemies(entityOne, entityTwo)
-	//If target is breakable
+	-- If target is breakable
 	if entityTwo and entityTwo:isa("BreakableEmitter") and (entityTwo:GetAllowedTeam() == 0 or entityOne and entityOne.GetTeamNumber and entityOne:GetTeamNumber() == entityTwo:GetAllowedTeam()) then
 		return true
 	end

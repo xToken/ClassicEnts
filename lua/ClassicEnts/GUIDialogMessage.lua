@@ -1,9 +1,9 @@
-// Natural Selection 2 'Classic Entities Mod'
-// Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
-// Designed to work with maps developed for Extra Entities Mod.  
-// Source located at - https://github.com/xToken/ClassicEnts
-// lua\ClassicEnts\GUIDialogMessage.lua
-// - Dragon
+-- Natural Selection 2 'Classic Entities Mod'
+-- Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
+-- Designed to work with maps developed for Extra Entities Mod.  
+-- Source located at - https://github.com/xToken/ClassicEnts
+-- lua\ClassicEnts\GUIDialogMessage.lua
+-- Dragon
 
 Script.Load("lua/GUIScript.lua")
 Script.Load("lua/NS2Utility.lua")
@@ -109,7 +109,7 @@ end
 
 function GUIDialogMessage:Uninitialize()
 
-    // Everything is attached to the background so uninitializing it will destroy all items.
+    -- Everything is attached to the background so uninitializing it will destroy all items.
     if self.background then
         GUI.DestroyItem(self.background)
     end
@@ -157,7 +157,7 @@ function GUIDialogMessage:UpdateDialog(text, displayTime)
 	self.text:SetText(wrappedText)
 	self:SetBackgroundColor(self.backGroundAlpha)
     local adjustedHeight = math.max(kBackgroundHeight + self.text:GetTextHeight(wrappedText) - (kBackgroundTopHeight - kBackgroundBottomHeight), 0)
-	//Top and Bottom fixed for rounded texture edges, scale inside piece according to text size.
+	-- Top and Bottom fixed for rounded texture edges, scale inside piece according to text size.
     self.backgroundCenter:SetSize(Vector(kBackgroundWidth, adjustedHeight, 0))
 	
 end
@@ -166,7 +166,7 @@ function GUIDialogMessage:Update(deltaTime)
 
 	PROFILE("GUIDialogMessage:Update")
 
-	//Fades out after displayTime.
+	-- Fades out after displayTime.
 	if self.backGroundAlpha > 0 then
 	
 		if PlayerUI_IsACommander() then

@@ -1,9 +1,9 @@
-// Natural Selection 2 'Classic Entities Mod'
-// Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
-// Designed to work with maps developed for Extra Entities Mod.  
-// Source located at - https://github.com/xToken/ClassicEnts
-// lua\ClassicEnts\ControlledPusher.lua
-// - Dragon
+-- Natural Selection 2 'Classic Entities Mod'
+-- Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
+-- Designed to work with maps developed for Extra Entities Mod.  
+-- Source located at - https://github.com/xToken/ClassicEnts
+-- lua\ClassicEnts\ControlledPusher.lua
+-- Dragon
 
 Script.Load("lua/Mixins/SignalListenerMixin.lua")
 Script.Load("lua/Trigger.lua")
@@ -24,7 +24,7 @@ local networkVars =
 	force = "float"
 }
 
-//Maintain Compat with EEM
+-- Maintain Compat with EEM
 local function AnglesToVector(angles)     
     local direction = Vector(0,0,0)
     if angles then
@@ -44,7 +44,7 @@ function ControlledPusher:OnCreate()
 	
 	InitMixin(self, SignalListenerMixin)
 	
-	//SignalMixin sets this on init, but I need to confirm its set on ent.
+	-- SignalMixin sets this on init, but I need to confirm its set on ent.
 	self.listenChannel = nil
 	self.direction = Vector(0, 1, 0) //Straight upppp tooo the mooon.
 	self.force = kDefaultForce
@@ -63,7 +63,7 @@ function ControlledPusher:OnInitialized()
 		InitMixin(self, EEMMixin)
 		self.direction = AnglesToVector(self:GetAngles())
 		
-		//Editor wont allow redefining a property with the same name without crashing :/
+		-- Editor wont allow redefining a property with the same name without crashing :/
 		if self.realForce ~= nil then
 			self.force = self.realForce
 		end

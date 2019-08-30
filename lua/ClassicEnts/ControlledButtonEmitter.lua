@@ -1,9 +1,9 @@
-// Natural Selection 2 'Classic Entities Mod'
-// Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
-// Designed to work with maps developed for Extra Entities Mod.  
-// Source located at - https://github.com/xToken/ClassicEnts
-// lua\ClassicEnts\ControlledButtonEmitter.lua
-// - Dragon
+-- Natural Selection 2 'Classic Entities Mod'
+-- Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
+-- Designed to work with maps developed for Extra Entities Mod.  
+-- Source located at - https://github.com/xToken/ClassicEnts
+-- lua\ClassicEnts\ControlledButtonEmitter.lua
+-- Dragon
 
 Script.Load("lua/ScriptActor.lua")
 Script.Load("lua/Mixins/ClientModelMixin.lua")
@@ -14,14 +14,14 @@ Script.Load("lua/UsableMixin.lua")
 Script.Load("lua/ClassicEnts/ScaleModelMixin.lua")
 Script.Load("lua/ClassicEnts/ControlledMixin.lua")
 
-//In terms of function, these are very similar to ButtonEmitter.  However, these support being disabled/enabled, and more crucially support a model.
-//In terms of mapping effort its really not logical to use your button entity as the model, you would simply use a prop and position the button entity inside.
-//However this could be used to have animations and/or such effects for buttons also... however at this time I dont think thats done.
+-- In terms of function, these are very similar to ButtonEmitter.  However, these support being disabled/enabled, and more crucially support a model.
+-- In terms of mapping effort its really not logical to use your button entity as the model, you would simply use a prop and position the button entity inside.
+-- However this could be used to have animations and/or such effects for buttons also... however at this time I dont think thats done.
 
-//Uses values from ControlledMixin, also uses cooldown for delay between uses, allowedTeam for an allowed team number (0 = anyteam).
-//Emits on emitChannel when pushed, can be toggled on/off using listenChannel.  Can also use resetOnTrigger to make useable once.
+-- Uses values from ControlledMixin, also uses cooldown for delay between uses, allowedTeam for an allowed team number (0 = anyteam).
+-- Emits on emitChannel when pushed, can be toggled on/off using listenChannel.  Can also use resetOnTrigger to make useable once.
 
-//Good default model - models/props/generic/terminals/generic_controlpanel_02.model
+-- Good default model - models/props/generic/terminals/generic_controlpanel_02.model
 
 class 'ControlledButtonEmitter' (ScriptActor)
 
@@ -50,7 +50,7 @@ function ControlledButtonEmitter:OnCreate()
 	InitMixin(self, SignalListenerMixin)
 	InitMixin(self, SignalEmitterMixin)
 	
-	//SignalMixin sets this on init, but I need to confirm its set on ent.
+	-- SignalMixin sets this on init, but I need to confirm its set on ent.
 	self.listenChannel = nil
 	self:SetUpdates(false)
 	
@@ -72,7 +72,7 @@ function ControlledButtonEmitter:OnInitialized()
 		self.modelName = self.model
         
         if self.modelName ~= nil then
-			//These can get re-created midgame, check for precached model
+			-- These can get re-created midgame, check for precached model
 			if Shared.GetModelIndex(self.modelName) == 0 and GetFileExists(self.modelName) then
 				Shared.PrecacheModel(self.modelName)
 			end
@@ -95,7 +95,7 @@ function ControlledButtonEmitter:OnInitialized()
 end
 
 function ControlledButtonEmitter:Reset()
-	//Jic realllly long cooldown
+	-- Jic realllly long cooldown
 	self.timeLastUsed = 0
 end
 
@@ -117,7 +117,7 @@ function ControlledButtonEmitter:GetCanBeUsed(player, useSuccessTable)
 end
 
 function ControlledButtonEmitter:OnUse(player, elapsedTime, useAttachPoint, usePoint, useSuccessTable)
-	//Trigger, basic validation
+	-- Trigger, basic validation
 	if Server then
 		self:EmitSignal(self.emitChannel, self.emitMessage)
 		self.timeLastUsed = Shared.GetTime()

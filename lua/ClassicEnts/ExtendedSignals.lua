@@ -1,12 +1,12 @@
-// Natural Selection 2 'Classic Entities Mod'
-// Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
-// Designed to work with maps developed for Extra Entities Mod.  
-// Source located at - https://github.com/xToken/ClassicEnts
-// lua\ExtendedSignals.lua
-// - Dragon
+-- Natural Selection 2 'Classic Entities Mod'
+-- Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
+-- Designed to work with maps developed for Extra Entities Mod.  
+-- Source located at - https://github.com/xToken/ClassicEnts
+-- lua\ExtendedSignals.lua
+-- Dragon
 
-// This extends the vanilla channel/message system to add compatibility with the EEM style system.
-// Lookup target and provided names to provided channels as needed.  Start above a certain constant to avoid any problems with vanilla maps (hopefully)
+-- This extends the vanilla channel/message system to add compatibility with the EEM style system.
+-- Lookup target and provided names to provided channels as needed.  Start above a certain constant to avoid any problems with vanilla maps (hopefully)
 
 Script.Load("lua/Mixins/SignalEmitterMixin.lua")
 Script.Load("lua/Mixins/SignalListenerMixin.lua")
@@ -24,17 +24,17 @@ end
 
 function LookupOrRegisterExtendedChannelToName(name)
 	assert(name ~= nil and name ~= "")
-	//Check to see if already registered.  Cannot be certain about load orders and want to make sure these get setup correctly.
+	-- Check to see if already registered.  Cannot be certain about load orders and want to make sure these get setup correctly.
 	if table.contains(kRegisteredExtendedChannels, name) then
-		//Shared.Message(string.format("Associating %s name to channel %s.", name, LookupExtendedChannelByName(name)))
+		--Shared.Message(string.format("Associating %s name to channel %s.", name, LookupExtendedChannelByName(name)))
 		return LookupExtendedChannelByName(name)
 	end
 	table.insert(kRegisteredExtendedChannels, name)
-	//Shared.Message(string.format("Registering %s name to channel %s.", name, kExtendedStartingChannel + #kRegisteredExtendedChannels))
+	--Shared.Message(string.format("Registering %s name to channel %s.", name, kExtendedStartingChannel + #kRegisteredExtendedChannels))
 	return kExtendedStartingChannel + #kRegisteredExtendedChannels
 end
 
-//Allow for global emitters/listeners
+-- Allow for global emitters/listeners
 function SignalEmitterMixin:EmitSignal(channel, message)
 	local listeners = GetEntitiesWithMixin("SignalListener")
 	for _, listener in ipairs(listeners) do
@@ -49,7 +49,7 @@ function SignalEmitterMixin:EmitSignal(channel, message)
 	end
 end
 
-//These seem like basic utility functions, no reason they are not part of the mixin.
+-- These seem like basic utility functions, no reason they are not part of the mixin.
 function SignalEmitterMixin:SetEmitChannel(setChannel)
 
     assert(type(setChannel) == "number")

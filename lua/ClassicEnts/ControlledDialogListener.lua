@@ -1,9 +1,9 @@
-// Natural Selection 2 'Classic Entities Mod'
-// Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
-// Designed to work with maps developed for Extra Entities Mod.  
-// Source located at - https://github.com/xToken/ClassicEnts
-// lua\ControlledDialogListener.lua
-// - Dragon
+-- Natural Selection 2 'Classic Entities Mod'
+-- Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
+-- Designed to work with maps developed for Extra Entities Mod.  
+-- Source located at - https://github.com/xToken/ClassicEnts
+-- lua\ControlledDialogListener.lua
+-- Dragon
 
 Script.Load("lua/Mixins/SignalListenerMixin.lua")
 Script.Load("lua/ClassicEnts/EEMMixin.lua")
@@ -47,7 +47,7 @@ function ControlledDialogListener:OnCreate()
 	
 	InitMixin(self, SignalListenerMixin)
 	
-	//SignalMixin sets this on init, but I need to confirm its set on ent.
+	-- SignalMixin sets this on init, but I need to confirm its set on ent.
 	self.listenChannel = nil
 	
 	if Server then
@@ -87,9 +87,9 @@ function ControlledDialogListener:OnInitialized()
 	
 	self.dialogTime = self.dialogTime or kDialogDefaultDisplayTime
 
-	//These are created as non-relevant to everything.  Once enabled, they become relevant to Clients
+	-- These are created as non-relevant to everything.  Once enabled, they become relevant to Clients
 	if Client and self:GetIsEnabled() then
-		//Create GUI or whatever, display dialog
+		-- Create GUI or whatever, display dialog
 		local GUIDialogMessage = ClientUI.GetScript("ClassicEnts/GUIDialogMessage")
 		if GUIDialogMessage and RetrieveClientDialogData(self.dialogChannel) then
 			GUIDialogMessage:UpdateDialog(RetrieveClientDialogData(self.dialogChannel), self.dialogTime)
@@ -104,16 +104,16 @@ function ControlledDialogListener:OverrideListener()
 		self:SetRelevancyDistance(Math.infinity)
 		self:AddTimedCallback(DisableListener, self.dialogTime)
 		self.enabled = true
-		//Add callback to turn off.
+		-- Add callback to turn off.
 	else
 		if self.disableOnNotify then
-			//disable
+			-- disable
 			self.enabled = false
 		elseif self.enableOnNotify then
-			//enable
+			-- enable
 			self.enabled = true		
 		else
-			//Default toggle
+			-- Default toggle
 			self.enabled = not self.enabled
 		end
 	end
@@ -129,7 +129,7 @@ if Client then
 
 	function BreakableEmitter:OnDestroy()
 		Entity.OnDestroy(self)
-		//Cleanup GUI?
+		-- Cleanup GUI?
 	end
 	
 end

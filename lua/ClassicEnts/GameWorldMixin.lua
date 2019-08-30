@@ -1,9 +1,9 @@
-// Natural Selection 2 'Classic Entities Mod'
-// Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
-// Designed to work with maps developed for Extra Entities Mod.  
-// Source located at - https://github.com/xToken/ClassicEnts
-// lua\ClassicEnts\GameWorldMixin.lua
-// - Dragon
+-- Natural Selection 2 'Classic Entities Mod'
+-- Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
+-- Designed to work with maps developed for Extra Entities Mod.  
+-- Source located at - https://github.com/xToken/ClassicEnts
+-- lua\ClassicEnts\GameWorldMixin.lua
+-- Dragon
 
 GameWorldMixin = CreateMixin(GameWorldMixin)
 GameWorldMixin.type = "GameWorld"
@@ -13,7 +13,7 @@ GameWorldMixin.networkVars = { }
 function GameWorldMixin:__initmixin()
 end
 
-//This creates/deletes a physics model not attached to an entity, so it wont be filtered out of traces.
+-- This creates/deletes a physics model not attached to an entity, so it wont be filtered out of traces.
 function GameWorldMixin:AddAdditionalPhysicsModel()
 	self:CleanupAdditionalPhysicsModel()
 	if not self.additionalPhysicsModel then
@@ -29,7 +29,7 @@ function GameWorldMixin:CleanupAdditionalPhysicsModel()
     end   
 end
 
-//New PathingObstacleAdd function, uses model extents and scale
+-- New PathingObstacleAdd function, uses model extents and scale
 function GameWorldMixin:UpdateScaledModelPathingMesh()
 
     if GetIsPathingMeshInitialized() then
@@ -39,8 +39,8 @@ function GameWorldMixin:UpdateScaledModelPathingMesh()
             gAllObstacles[self] = nil
         end
 		
-		//This gets really hacky.. some models are setup much differently.. their origin is not center mass.
-		//Limit maximum amount of adjustment to try to correct ones that are messed up, but not break ones that are good.
+		-- This gets really hacky.. some models are setup much differently.. their origin is not center mass.
+		-- Limit maximum amount of adjustment to try to correct ones that are messed up, but not break ones that are good.
 		local extents = self:GetModelExtentsVector()
 		local scale = self:GetModelScale()
         local radius = extents.x * scale.x

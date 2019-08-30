@@ -1,16 +1,15 @@
-// Natural Selection 2 'Classic Entities Mod'
-// Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
-// Designed to work with maps developed for Extra Entities Mod.  
-// Source located at - https://github.com/xToken/ClassicEnts
-// lua\ControlledMixin.lua
-// - Dragon
+-- Natural Selection 2 'Classic Entities Mod'
+-- Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
+-- Designed to work with maps developed for Extra Entities Mod.  
+-- Source located at - https://github.com/xToken/ClassicEnts
+-- lua\ControlledMixin.lua
+-- Dragon
 
 ControlledMixin = CreateMixin(ControlledMixin)
 ControlledMixin.type = "Controlled"
 
-//Allows enabling/disabling of interactable entities.  Uses initial enable flag from map, defaults to true.
-//disableOnNotify & enableOnNotify determine what happens when this receives a signal.
-//
+-- Allows enabling/disabling of interactable entities.  Uses initial enable flag from map, defaults to true.
+-- disableOnNotify & enableOnNotify determine what happens when this receives a signal.
 
 ControlledMixin.networkVars =
 {
@@ -22,13 +21,13 @@ local function OnReceiveSignal(self)
 		self:OverrideListener()
 	else
 		if self.disableOnNotify then
-			//disable
+			-- disable
 			self:SetIsEnabled(false)
 		elseif self.enableOnNotify then
-			//enable
+			-- enable
 			self:SetIsEnabled(true)	
 		else
-			//Default toggle
+			-- Default toggle
 			self:SetIsEnabled(not self.enabled)
 		end
 	end
