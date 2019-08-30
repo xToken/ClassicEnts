@@ -1,9 +1,9 @@
-// Natural Selection 2 'Classic Entities Mod'
-// Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
-// Designed to work with maps developed for Extra Entities Mod.  
-// Source located at - https://github.com/xToken/ClassicEnts
-// lua\ClassicEnts\ControlledTeleporter.lua
-// - Dragon
+-- Natural Selection 2 'Classic Entities Mod'
+-- Adds some additional entities inspired by Half-Life 1 and the Extra Entities Mod by JimWest - https://github.com/JimWest/ExtraEntitesMod
+-- Designed to work with maps developed for Extra Entities Mod.  
+-- Source located at - https://github.com/xToken/ClassicEnts
+-- lua\ClassicEnts\ControlledTeleporter.lua
+-- Dragon
 
 Script.Load("lua/Mixins/SignalListenerMixin.lua")
 Script.Load("lua/Trigger.lua")
@@ -30,13 +30,13 @@ local function LookupDestinationTable(networkId)
 	end
 end
 
-local function GetTeleportDestinationCoords(self)
+local function GetTeleportDestination(self)
 
     local destinationEntityIds = LookupDestinationTable(self.teleportDestinationId)
 	if destinationEntityIds then
 		local destinationId = destinationEntityIds[math.random(1, #destinationEntityIds)]
 		if destinationId and Shared.GetEntity(destinationId) then
-			return Shared.GetEntity(destinationId):GetCoords()
+			return Shared.GetEntity(destinationId)
 		end
 	end
 
@@ -50,11 +50,12 @@ function ControlledTeleporter:OnCreate()
 	
 	InitMixin(self, SignalListenerMixin)
 	
-	//SignalMixin sets this on init, but I need to confirm its set on ent.
+	-- SignalMixin sets this on init, but I need to confirm its set on ent.
 	self.listenChannel = nil
 	self.exitOnly = false
 	self.allowedTeam = 0
 	self.timeLastTeleport = 0
+	self.entityIdTracking = { }
 	
 	self:SetPropagate(Entity.Propagate_Never)
 	
@@ -67,24 +68,24 @@ function ControlledTeleporter:OnInitialized()
 	InitMixin(self, ControlledMixin)
 	InitMixin(self, EEMMixin)
 	
-	//vanilla system checks if .teleportDestinationId == .teleportDestinationId then
-	//EEM uses .destination against .name
+	-- vanilla system checks if .teleportDestinationId == .teleportDestinationId then
+	-- EEM uses .destination against .name
 	
 	if self.teleportDestinationId and self.oldMapName == "teleport_destination" then
-		//We are an destination, register in global table.
+		-- We are an destination, register in global table.
 		self.exitOnly = true
 		RegisterInGlobalTable(self.teleportDestinationId, self:GetId())
 	end
 	
 	if not self.teleportDestinationId then
-		//We are an eem teleporter, register new names for teleport network IDs.  All EEM teleporters can be a destination, but not necessarily an entrance.
+		-- We are an eem teleporter, register new names for teleport network IDs.  All EEM teleporters can be a destination, but not necessarily an entrance.
 		local destinationId = RegisterInGlobalTable(LookupOrRegisterExtendedChannelToName(ToString(self.name .. "_teleporter")), self:GetId())
 		if self.exitonly then
-			//EEM exit only, we can set teleportDestinationId for consistency with vanilla ents but its never used atm.
+			-- EEM exit only, we can set teleportDestinationId for consistency with vanilla ents but its never used atm.
 			self.exitOnly = true
 			self.teleportDestinationId = destinationId
 		elseif self.destination then
-			//If we are not a destination, then register our channel and set it as our destinationId.
+			-- If we are not a destination, then register our channel and set it as our destinationId.
             self.teleportDestinationId = LookupOrRegisterExtendedChannelToName(ToString(self.destination .. "_teleporter"))
 		else
 			Shared.Message(string.format("Error: ControlledTeleporterTrigger %s has no destination", self.name))
@@ -125,7 +126,8 @@ function ControlledTeleporter:CanTeleportEntity(entity)
 	if not self.exitOnly and self:GetIsEnabled() and self.timeLastTeleport + self:GetCooldown() < Shared.GetTime() and entity then
 		local className = entity:GetClassName()
 		if table.contains(kTeleportClassNames, className) then
-			if self:GetAllowedTeam() == 0 or (entity.GetTeamNumber and entity:GetTeamNumber() == self:GetAllowedTeam()) then
+			if (self:GetAllowedTeam() == 0 or (entity.GetTeamNumber and entity:GetTeamNumber() == self:GetAllowedTeam()))
+				and (self.entityIdTracking[entity:GetId()] and self.entityIdTracking[entity:GetId()] or 0) + kDefaultCooldown < Shared.GetTime() then
 				return true
 			end
 		end
@@ -139,16 +141,28 @@ function ControlledTeleporter:OnSetEnabled(enabled)
 	end
 end
 
+local function OnTryTeleportAgain(self, enterEnt)
+	if enterEnt and enterEnt.GetIsAlive and GetIsUnitActive(enterEnt) and self:GetIsPointInside(enterEnt:GetOrigin()) then
+		self:OnTriggerEntered(enterEnt)
+	end
+	return false
+end
+
 function ControlledTeleporter:OnTriggerEntered(enterEnt, triggerEnt)
 
     if self:CanTeleportEntity(enterEnt) then
 
-        local destinationCoords = GetTeleportDestinationCoords(self)
+        local destinationEnt = GetTeleportDestination(self)
 
-        if destinationCoords then
-        
+        if destinationEnt then
+        	
+        	local destinationCoords = destinationEnt:GetCoords()
             local oldCoords = enterEnt:GetCoords()
-        
+
+        	destinationEnt.entityIdTracking[enterEnt:GetId()] = Shared.GetTime()
+        	self.entityIdTracking[enterEnt:GetId()] = Shared.GetTime()
+			self.timeLastTeleport = Shared.GetTime()
+
             enterEnt:SetCoords(destinationCoords)
             
             if enterEnt:isa("Player") then
@@ -162,25 +176,24 @@ function ControlledTeleporter:OnTriggerEntered(enterEnt, triggerEnt)
             GetEffectManager():TriggerEffects("teleport_trigger", { effecthostcoords = oldCoords }, self)
             GetEffectManager():TriggerEffects("teleport_trigger", { effecthostcoords = destinationCoords }, self)
 			
-			//EEM seems to place teleporters much closer to the brush objects
-			// make sure nothing blocks us
+			-- EEM seems to place teleporters much closer to the brush objects
+			-- make sure nothing blocks us
 			local destYaw = enterEnt:GetAngles().yaw
 			local extents = LookupTechData(enterEnt:GetTechId(), kTechDataMaxExtents)
 			local teleportPointBlocked = Shared.CollideCapsule(enterEnt:GetOrigin(), extents.y, math.max(extents.x, extents.z), CollisionRep.Default, PhysicsMask.AllButPCs, nil)
 			if teleportPointBlocked then
-				// move it a bit so we're not getting blocked
+				-- move it a bit so we're not getting blocked
 				local antiStuckVector = Vector(0,0,0)
 				antiStuckVector.z = math.cos(destYaw)
 				antiStuckVector.x = math.sin(destYaw)
 				antiStuckVector.y = 0.5
 				enterEnt:SetOrigin(enterEnt:GetOrigin() + antiStuckVector)
 			end
-            
-            enterEnt.timeOfLastPhase = Shared.GetTime()
-			self.timeLastTeleport = Shared.GetTime()
         
         end
-    
+    else
+    	-- Add single retry incase we are sitting waiting in the trigger
+    	self:AddTimedCallback(function() OnTryTeleportAgain(self, enterEnt) end, kDefaultCooldown)
     end
 	
 end
