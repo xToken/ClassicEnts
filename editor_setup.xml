@@ -3,7 +3,6 @@
     
     <!-- Ambient sound -->    
     <class name="ambient_sound">
-	
         <help>Plays sound for a local player when entering specifies radius.</help>
 
 		<sound>
@@ -67,9 +66,26 @@
         
     </class>
     
+    <!-- Forcefield for tutorial -->
+    <class name="forcefield"  placeable="true">
+        
+        <model>
+            <file>models/effects/proximity_force_field_noEntry.model</file>
+            <scale>scale</scale>
+            <default_model>models/system/editor/team_location.model</default_model>
+        </model>
+
+        <size>
+            <scale>scale</scale>
+        </size>
+        
+        <parameter name="scale" type="vector" label="Scale" default="1.0, 1.0, 1.0"/>
+        <parameter name="name"  type="string" label="Name"  default=""/>
+        
+    </class>
+    
     <!-- Un-animated prop -->
     <class name="prop_static"  placeable="false">
-	
         <model>
             <file>model</file>
             <scale>scale</scale>
@@ -97,22 +113,28 @@
 		<parameter name="pathInclude" type="boolean" label="Pathing Include" help="On will include in NavMesh. Off excludes prop from nav mesh" default="true"/>
         <parameter name="pathWalkable" type="boolean" label="Pathing Walkable" help="On will be walkable in NavMesh. Off makes prop not walkable in nav mesh" default="true"/>
 		<parameter name="collidable" type="boolean" label="Collidable" help="The prop can be collided with" default="true"/>
+		<parameter name="emissivePower" type="boolean" label="Emissive matches power" help="Matches emissiveness with the room power." default="true"/>
+		<parameter name="allowBullets" type="boolean" label="Allow Bullets Through" help="If collidable, allow bullets through as if it was not collidable." default="false"/>
        
+    </class>
+    
+    <!-- Tutorial ambush example -->
+    <class name="ambush_example"  placeable="true">
+        <model>
+            <file>models/bootcamp/ambush_example.model</file>
+        </model>
     </class>
 	
     <class name="billboard"  placeable="false">
-	
 		<billboard>
 			<file>material</file>
 			<size>size</size>
 		</billboard>
         <parameter name="material" type="file" label="Material" filter="*.material" default="materials/editor/unknown_billboard.material"/>
 		<parameter name="size" type="vector" label="Size" default="1.0, 1.0, 1.0"/>
-		
     </class>
 	
     <class name="decal" placeable="true">
-	
         <decal>
             <file>material</file>
             <extents>extents</extents>
@@ -123,11 +145,9 @@
         </box>			
         <parameter name="extents" type="vector" label="Extents" default="1.0, 1.0, 1.0"/>
         <parameter name="material" type="file" label="Material" filter="*.material"/>
-		
     </class>	
 
 	<class name="reflection_probe" placeable="true">
-	
 		<sphere>
             <radius>distance</radius>
         </sphere>		
@@ -140,7 +160,7 @@
 		</reflection_probe>
         <parameter name="distance" type="distance" label="Max Distance" help="Maximum distance the reflection probe will affect the scene" default="2.0"/>
 		<parameter name="strength" type="real" label="Strength" help="Intensity of the reflections. Recommended to be less than 0.5" default="0.5"/>
-		
+        <parameter name="ignorePowergrid" type="boolean" label="Ignore power grid" default="false"/>
     </class>	
 	
     <!-- Base class for all lights -->
@@ -258,7 +278,6 @@
         <parameter name="color_dir_down" type="color" label="Down Color" default="1.0, 1.0, 1.0"/>
         <parameter name="color_dir_forward" type="color" label="Forward Color" default="1.0, 1.0, 1.0"/>
         <parameter name="color_dir_backward" type="color" label="Backward Color" default="1.0, 1.0, 1.0"/>
-		
     </class>
 
     <!-- Base class for color grading -->
@@ -283,31 +302,63 @@
         <sphere>
             <radius>distance</radius>
         </sphere>
-		
     </class>
 
+    <!-- Camera position -->
+    <class name="camera_origin" placeable="true">
+        <model>
+            <file>models/system/editor/camera_origin.model</file>
+        </model>
+        
+        <parameter name="cameraName" type="string" label="Camera Name" help="Name of the camera to be referenced in LUA." default=""/>
+        <parameter name="fov" type="real" label="FOV" help="Field of view of the camera, in degrees.  90 is normal." default="90.0"/>
+    </class>
+    
+    <!-- Target position -->
+    <class name="target_point">
+    
+        <model>
+            <file>models/system/editor/waypoint.model</file>
+        </model> 
+        
+        <parameter name="targetName" type="string" label="Target Name" help="Name this position will be referred to as in LUA." default=""/>
+        
+    </class>
+    
+    <!-- Target vector -->
+    <class name="cheering_marine">
+        <model>
+            <file>models/marine/male/male.model</file>
+        </model> 
+    </class>
+    
     <!-- Base spawn point -->
     <class name="base_start" placeable="false">
-	
         <model>
             <file>models/system/editor/player_spawn.model</file>
-        </model> 
-		
+        </model>            
     </class>
 
     <!-- Player spawn point -->
     <class name="ready_room_start">
-	
         <parent>base_start</parent>
         <model>
             <file>models/system/editor/player_spawn.model</file>
-        </model>  
-		
+        </model>            
+    </class>
+    
+    <!-- Skulk challenge bot spawn point -->
+    <class name="bot_spawn">
+        <parent>base_start</parent>
+        <model>
+            <file>models/system/editor/player_spawn.model</file>
+        </model>
+        
+        <parameter name="spawngroup" label="Spawn Group" type="integer" default="0" help="Spawn group for hive challenge bot spawner." />
     </class>
 	
     <!-- Placeable structures -->
     <class name="base_alien_structure" placeable="false">
-	
         <parameter name="startsBuilt" label="Starts Built" type="boolean" default="true" />
 		<parameter name="startsMature" label="Starts Mature" type="boolean" default="false" />
         
@@ -324,7 +375,6 @@
     
     <!-- Placeable structures -->
     <class name="base_structure" placeable="false">
-	
         <parameter name="startsBuilt" label="Starts Built" type="boolean" default="true" />
         
         <!-- Team number -->
@@ -335,7 +385,6 @@
         </parameter>
 		
 		<parameter name="onlyexplore" label="Only Explore" type="boolean" default="true" help="Only create this entity during explore/training mode"/>
-		
     </class>
     
     <class name="commandstation"> <parent>base_structure</parent><model><file>models/marine/command_station/command_station.model</file></model></class>
@@ -348,6 +397,8 @@
 	<class name="armslab"> <parent>base_structure</parent><model><file>models/marine/arms_lab/arms_lab.model</file></model></class>
     <class name="arc"> <parent>base_structure</parent><model><file>models/marine/arc/arc.model</file></model></class>
 	<class name="phasegate"> <parent>base_structure</parent><model><file>models/marine/phase_gate/phase_gate.model</file></model></class>
+    <class name="mine"> <parent>base_structure</parent><model><file>models/marine/mine/mine.model</file></model></class>
+
 	
     <class name="harvester"> <parent>base_alien_structure</parent><model><file>models/alien/harvester/harvester.model</file></model></class>
     <class name="hydra"> <parent>base_alien_structure</parent><model><file>models/alien/hydra/hydra.model</file></model></class>
@@ -371,25 +422,19 @@
 	</class>
 	
 	<class name="observatory"> <parent>base_structure</parent>
-	
 		<model><file>models/marine/observatory/observatory.model</file></model>
-		<parameter name="phaseTechResearched" label="Start with phase tech researched" type="boolean" default="false" />
-		
+		<parameter name="phaseTechResearched" label="Start with phase tech researched" type="boolean" default="false" />		
 	</class>
     
 	<class name="roboticsfactory"> 
-	
         <parent>base_structure</parent>
         <model>
             <file>models/marine/robotics_factory/robotics_factory.model</file>
         </model>
-        <parameter name="arcFactory" label="ARC robotics factory" type="boolean" help="Start with ARC robotics factory upgrade" default="false" />
-		
+        <parameter name="arcFactory" label="ARC robotics factory" type="boolean" help="Start with ARC robotics factory upgrade" default="false" />		
     </class>
     
-	<class name="hive"> 
-	
-		<parent>base_alien_structure</parent>
+	<class name="hive"> <parent>base_alien_structure</parent>
 		<model><file>models/alien/hive/hive.model</file></model>
         <parameter name="hiveType" type="choice" label="Hive Type" default="0">
             <choice label="Not Upgraded" value="0"/>
@@ -397,18 +442,14 @@
             <choice label="Shade Hive" value="2"/>
 			<choice label="Shift Hive" value="3"/>
         </parameter>
-		
 	</class>
 	
 	<class name="base_player" placeable="false">
-	
 		<parameter name="onlyexplore" label="Only Explore" type="boolean" default="true" help="Only create this entity during explore/training mode"/>
 		<parameter name="name" label="Name" type="string" default="" />
-		
 	</class>
 	
 	<class name="base_alien" placeable="false">
-	
 		<parent>base_player</parent>
         <!-- Team number -->
         <parameter name="teamNumber" type="choice" label="Team Number" default="2">
@@ -416,7 +457,6 @@
             <choice label="Marine" value="1"/>
             <choice label="Alien" value="2"/>
         </parameter>
-		
 	</class>
 	
 	<class name="base_marine" placeable="false">
@@ -428,20 +468,17 @@
             <choice label="Marine" value="1"/>
             <choice label="Alien" value="2"/>
         </parameter>
-		
 	</class>
 	
-	<class name="marine"> <parent>base_marine</parent><model><file>models/marine/male/male.model</file></model></class>
+	<class name="marine"> <parent>base_marine</parent><model><file>models/marine/male/male_spawn.model</file></model></class>
 
 	<class name="exo">
-	
 		<parent>base_marine</parent>
 		<model><file>models/marine/exosuit/exosuit_cm.model</file></model>
         <parameter name="layout" type="choice" label="Layout" default="1">
             <choice label="Claw Minigun" value="1"/>
             <choice label="Dual Minigun" value="2"/>
         </parameter>
-		
 	</class>
 	
 	<class name="skulk"> <parent>base_alien</parent><model><file>models/alien/skulk/skulk.model</file></model></class>
@@ -449,6 +486,8 @@
 	<class name="lerk"> <parent>base_alien</parent><model><file>models/alien/lerk/lerk.model</file></model></class>
 	<class name="fade"> <parent>base_alien</parent><model><file>models/alien/fade/fade.model</file></model></class>
 	<class name="onos"> <parent>base_alien</parent><model><file>models/alien/onos/onos.model</file></model></class>
+    
+    <class name="babbler"> <parent>base_alien</parent><model><file>models/alien/babbler/babbler.model</file></model></class>
     
     <!-- NS2 strategy gameplay rules -->
     <class name="ns2_gamerules" label="Use core NS2 strategy gameplay">
@@ -463,7 +502,34 @@
         </model>
 
     </class>
+    
+    
+    <!-- Skulk challenge gameplay rules -->
+    <class name="skulk_challenge_gamerules" label="Use skulk challenge gameplay">
+    
+        <parent>gamerules</parent>
+        
+        <model>
+            <file>models/system/editor/gamerules.model</file>
+        </model>
+    
+    </class>
+    
+    <!-- Skulk challenge finish line area -->
+    <class name="finish_line" placeable="true">
 
+        <model>
+            <file>models/system/editor/location.model</file>
+            <scale>scale</scale>
+        </model>
+    
+        <size>
+            <scale>scale</scale>
+        </size>
+        <parameter name="scale" type="vector" label="Scale" default="1.0, 1.0, 1.0" help=""/>        
+        <parameter name="name" label="Name" type="string" help="Name of trigger which can be referenced in lua." />
+
+    </class>
     
     <!-- Reverb control -->    
     <class name="reverb">
@@ -550,6 +616,22 @@
         <parameter name="name" label="Name" type="string" help="Name of trigger which can be referenced by other entities" />
 
     </class>
+
+    <!-- Area Trigger -->
+    <class name="area_trigger" placeable="true">
+
+        <model>
+            <file>models/system/editor/location.model</file>
+            <scale>scale</scale>
+        </model>
+    
+        <size>
+            <scale>scale</scale>
+        </size>
+        <parameter name="scale" type="vector" label="Scale" default="1.0, 1.0, 1.0" help=""/>        
+        <parameter name="name" label="Name" type="string" help="Name of trigger which can be referenced in lua." />
+
+    </class>
 	
 	<class name="worldtooltip">	
 	
@@ -557,13 +639,12 @@
 		
         <model>
             <file>models/misc/attentionmark/attentionmark.model</file>
-        </model>
+        </model> 
 	
 	</class>
 
     <!-- Ladder -->
     <class name="ladder">
-	
         <model>
             <file>models/system/editor/ladder.model</file>
             <scale>scale</scale>
@@ -572,15 +653,16 @@
         <size>
             <scale>scale</scale>
         </size>
-        <parameter name="scale" type="vector" label="Scale" default="1.0, 1.0, 1.0" help=""/>    
-		
+        <parameter name="scale" type="vector" label="Scale" default="1.0, 1.0, 1.0" help=""/>        
     </class>
 
     <!-- Tell overview what area to render out and the game what area is playable for commander -->
     <class name="minimap_extents">
     
-		<parent>trigger</parent>
+	<parent>trigger</parent>
 
+    <parameter name="useLegacyOverview" type="boolean" label="Legacy Overview Image" help="Maps blips (entity icons) in-game to the minimap using old, incorrect technique that matches up with pre-320 generated overview images." default="false"/>
+    
     </class>
 
     <!-- Team join -->
@@ -610,7 +692,7 @@
     <!-- Simple location -->
     <class name="location" help="Enter name location which is shown to players" >
 
-		<parent>trigger</parent> 
+	<parent>trigger</parent>
 
         <parameter name="showOnMinimap" type="boolean" label="Show On Minimap" help="Show location on minimap" default="true"/>
 
@@ -639,7 +721,12 @@
             <choice label="Marine" value="2"/>
             <choice label="Alien" value="3"/>
         </parameter>
-        
+        <parameter name="damageType" type="choice" label="Damage Type" help="Determines the type of damage this should be. This is for visual effects only." default="1">
+            <choice label="Normal" value="1"/>
+            <choice label="Gas" value="2"/>
+            <choice label="Fire" value="3"/>
+            <choice label="Electric" value="4"/>
+        </parameter>
     </class>
 	
     <class name="teleport_trigger">
@@ -699,6 +786,21 @@
 
     </class>
     
+    <!-- Obs range circle -->
+    <class name="obs_range_circle" placeable="true">
+
+        <model>
+            <file>models/misc/circle/circle.model</file>
+            <scale>scale</scale>
+        </model>
+
+        <size>
+            <scale>scale</scale>
+        </size>
+        <parameter name="scale" type="vector" label="Scale" default="43.67, 1.0, 43.67" help="Size of Observatory range circle"/> <!-- Currently 22 meters -->
+
+    </class>
+    
     <!-- Relevancy range circle -->
     <class name="relevancy_range_circle" placeable="true">
 
@@ -710,10 +812,24 @@
         <size>
             <scale>scale</scale>
         </size>
-        <parameter name="scale" type="vector" label="Scale" default="81.5, 1.0, 81.5" help="Size of max relevancy range circle"/> <!-- Currently 10 meters -->
+        <parameter name="scale" type="vector" label="Scale" default="81.5, 1.0, 81.5" help="Size of max relevancy range circle"/> <!-- Currently 40 meters -->
 
     </class>
     
+        <!-- Relevancy range circle -->
+    <class name="egg_spawn_range_circle" placeable="true">
+
+        <model>
+            <file>models/misc/circle/circle_alien.model</file>
+            <scale>scale</scale>
+        </model>
+
+        <size>
+            <scale>scale</scale>
+        </size>
+        <parameter name="scale" type="vector" label="Scale" default="44.86, 1.0, 44.86" help="Size of egg auto spawn range from a hive"/> <!-- Currently 22 meters -->
+
+    </class>
     
     <class name="sound_effect">
     
@@ -735,11 +851,11 @@
     
         <pathing>
             <include></include>
-            <file>models/misc/tech_point/tech_point.model</file>
+            <file>models/misc/tech_point/tech_point_editor.model</file>
         </pathing>
 
         <model>
-            <file>models/misc/tech_point/tech_point.model</file>
+            <file>models/misc/tech_point/tech_point_editor.model</file>
             <static_collider>true</static_collider>
             <static_visual>true</static_visual>
         </model>
@@ -765,19 +881,15 @@
     
     <!-- Tech point to be used in smaller rooms -->
     <class name="tech_point_hole" placeable="false">
-	
         <model>
             <file>models/misc/tech_point_hole/tech_point_hole.model</file>
         </model>
-		
     </class>
     
     <class name="resource_point">
-	
         <model>
-            <file>models/misc/resource_nozzle/resource_nozzle.model</file>
+            <file>models/misc/resource_nozzle/resource_nozzle_editor.model</file>
         </model>
-		
     </class>
     
     <!--  -->
@@ -793,16 +905,13 @@
     </class>
 
     <class name="commander_camera">
-	
-		<model>
-		  <file>models/system/editor/commander_camera.model</file>
-		</model>
-		<parameter name="cameraHeight" type="distance" label="Camera height" default="10.0"/>'
-		
-	</class>
+    <model>
+      <file>models/system/editor/commander_camera.model</file>
+    </model>
+    <parameter name="cameraHeight" type="distance" label="Camera height" default="10.0"/>'
+  </class>
 
     <class name="door">
-	
         <model>
             <file>models/misc/door/door.model</file>
         </model>
@@ -814,7 +923,6 @@
     
     <!-- Power grid -->
     <class name="power_point" help="Place in location entity to affect structures and lights there">
-	
         <model>
             <file>models/system/editor/power_node.model</file>
         </model>
@@ -823,42 +931,42 @@
         
     </class>
     
-	<!-- Cinematic entity -->
-	<class name="cinematic_base" placeable="false">
+  <!-- Cinematic entity -->
+  <class name="cinematic_base" placeable="false">
 
-		<cinematic>
-			<file>cinematicName</file>
-			<repeat_style>repeatStyle</repeat_style>
-		</cinematic>
+	<cinematic>
+		<file>cinematicName</file>
+		<repeat_style>repeatStyle</repeat_style>
+	</cinematic>
 
-		<parameter name="cinematicName" type="file" label="Cinematic file" default="" filter="*.cinematic" help="Name of cinematic file (created with Cinematic Editor)"/>
+    <parameter name="cinematicName" type="file" label="Cinematic file" default="" filter="*.cinematic" help="Name of cinematic file (created with Cinematic Editor)"/>
 
-		<parameter name="repeatStyle" type="choice" label="Repeat Style" default="1">
-			<choice label="No Repeat" value="0"/>
-			<choice label="Loop" value="1"/>
-			<choice label="Endless" value="2"/>
-		</parameter>
-		
-		<parameter name="commanderInvisible" type="boolean" label="Commander Invisible" help="This cinematic will not be displayed for commanders if this value is true." default="false" />
+    <parameter name="repeatStyle" type="choice" label="Repeat Style" default="1">
+        <choice label="No Repeat" value="0"/>
+        <choice label="Loop" value="1"/>
+        <choice label="Endless" value="2"/>
+    </parameter>
+	
+	<parameter name="commanderInvisible" type="boolean" label="Commander Invisible" help="This cinematic will not be displayed for commanders if this value is true." default="false" />
 
-	</class>
+  </class>
     
-	<class name="cinematic">
+  <class name="cinematic">
     
-		<parent>cinematic_base</parent>
-		<parent>signal_listener</parent>
-		
-		<help>Adds a cinematic entity to the game world.</help>
+    <parent>cinematic_base</parent>
+    <parent>signal_listener</parent>
+    
+    <help>Adds a cinematic entity to the game world.</help>
 
-		<model>
-		  <file>models/system/editor/cinematic.model</file>
-		</model>
-		
-		<parameter name="startsOnMessage" type="string" label="Play on message" help="The cinematic effect will play when this message is received" default=""/>
+    <model>
+      <file>models/system/editor/cinematic.model</file>
+    </model>
+    
+    <parameter name="startsOnMessage" type="string" label="Play on message" help="The cinematic effect will play when this message is received" default=""/>
 
-	</class>
+  </class>
   
-	<class name="sound_effect">
+  <class name="sound_effect">
     
         <parent>signal_listener</parent>
         
@@ -906,45 +1014,116 @@
         
     </class>
     
+    <class name="fog_mesh_volume" placeable="true">
+        
+        <model>
+            <file>models/system/editor/fogcontrols.model</file>
+            <scale>scale</scale>
+        </model>
+        
+        <fog_mesh_volume>
+            <fogVolumeName>fogVolumeName</fogVolumeName>
+            <density>density</density>
+            <color>color</color>
+            <falloff>falloff</falloff>
+            <sortPriority>sortPriority</sortPriority>
+        </fog_mesh_volume>
+        
+        <size>
+            <scale>scale</scale>
+        </size>
+        
+        <parameter name="scale" type="vector" label="Scale" default="1.0, 1.0, 1.0"/>
+        <parameter name="fogVolumeName" type="string" label="Fog Volume Name" help="The name of the fog volume.  This name should match a geometry group name, but without the 'FogVolume_' prefix.  For example, if the geometry group is named 'FogVolume_BigFog1', then the correct name here would be 'BigFog1'.  The geometry in the group should be a closed mesh -- no missing faces!"/>
+        <parameter name="density" type="real" label="Density" default="100.0" help="The density of the fog.  Higher values mean the fog gets thicker quicker."/>
+        <parameter name="color" type="color" label="Color" default="0.25, 0.25, 0.25"/>
+        <parameter name="falloff" type="real" label="Falloff" default="0.0" help="The exponential falloff constant used to vary the fog thickness.  Higher values create a sharper falloff, lower values a more gradual falloff, with 0 being a totally uniform fog density.  This fog distribution can be changed by scaling, rotating, and moving the fog entity.  The fog density varies along the fog entity's Y-axis."/>
+        <parameter name="sortPriority" type="integer" label="Sort Priority" help="Determines the order in which similar fog objects are rendered in (Eg what order fog_volume objects render relative to other fog_volume objects).  Fog objects are rendered in descending sort priority.  Otherwise, fog objects would flicker and fight each other as the render order fluctuates."/>
+        
+    </class>
+    
+    <class name="fog_sphere_volume" placeable="true">
+        
+        <billboard>
+            <file>materials/editor/fog_billboard.material</file>
+            <size>1.0</size>
+        </billboard>
+        
+        <sphere>
+            <radius>radius</radius>
+        </sphere>
+        
+        <fog_sphere_volume>
+            <density>density</density>
+            <radius>radius</radius>
+            <color>color</color>
+            <sortPriority>sortPriority</sortPriority>
+            <softness>softness</softness>
+        </fog_sphere_volume>
+        
+        <parameter name="density" type="real" label="Density" default="5" help="The density of the fog.  Higher values mean the fog gets thicker quicker."/>
+        <parameter name="color" type="color" label="Color" default="0.25, 0.25, 0.25"/>
+        <parameter name="sortPriority" type="integer" label="Sort Priority" help="Determines the order in which similar fog objects are rendered in (Eg what order fog_volume objects render relative to other fog_volume objects).  Fog objects are rendered in descending sort priority.  Otherwise, fog objects would flicker and fight each other as the render order fluctuates."/>
+        <parameter name="radius" type="distance" label="Radius" help="Maximum visible radius of the fog sphere." default="5.0"/>
+        <parameter name="softness" type="real" label="Softness" default = "0.5" help="Determines the softness of the edges of the sphere by adjusting the density distribution of the fog at the edges versus in the middle of the sphere.  1.0 = maximum softness, 0.0 = uniform density (hard edges)"/>
+        
+    </class>
+    
+    <class name="wet_map_volume" placeable="true">
+        
+        <model>
+            <file>models/system/editor/fogcontrols.model</file>
+        </model>
+        
+        <wet_map_volume>
+            <wetMapVolumeName>wetMapVolumeName</wetMapVolumeName>
+            <wetness>wetness</wetness>
+        </wet_map_volume>
+        
+        <parameter name="wetMapVolumeName" type="string" label="Wet Map Volume Name" help="The name of the wetmap volume.  This name should match a geometry group name, but without the 'WetMapVolume_' prefix.  For example, if the geometry group is named 'WetMapVolume_Outdoor1', then the correct name here would be 'Outdoor1'.  The geometry in the group should be a closed mesh -- no missing faces!"/>
+        <parameter name="wetness" type="real" label="Wetness" default="1.0" help="The amount of wetness in this volume.  Range from 0.0 (dry) to 1.0 (wet)."/>
+        
+    </class>
+
+    
     <class name="prop_dynamic_animator">
     
-		<parent>signal_listener</parent>
-
-		<model>
-			<file>models/system/editor/sound_reverb.model</file>
-		</model> 
-
-		<parameter name="listenMessage" type="string" label="Animate on message" help="Will activate when this message is received." default=""/>
-		<parameter name="inputName" type="string" label="Input name" help="Name of the animation input to affect." default=""/>
-		<parameter name="inputValue" type="string" label="Input Value" help="Input name will be set to this value." default=""/>
-		<sphere><radius>range</radius></sphere>
-		<parameter name="range" type="distance" label="Search radius" default="10" help="Only prop_dynamics within this range will be affected."/>
+        <parent>signal_listener</parent>
+        
+        <model>
+            <file>models/system/editor/sound_reverb.model</file>
+        </model> 
+        
+        <parameter name="listenMessage" type="string" label="Animate on message" help="Will activate when this message is received." default=""/>
+        <parameter name="inputName" type="string" label="Input name" help="Name of the animation input to affect." default=""/>
+        <parameter name="inputValue" type="string" label="Input Value" help="Input name will be set to this value." default=""/>
+        <sphere><radius>range</radius></sphere>
+        <parameter name="range" type="distance" label="Search radius" default="10" help="Only prop_dynamics within this range will be affected."/>
     
     </class>
     
     <!-- Skybox cinematic -->
     <class name="skybox">
 
-		<cinematic>
-			<file>cinematicName</file>
-			<repeat_style>endless</repeat_style>
-			<render_zone>sky</render_zone>
-		</cinematic>
+	<cinematic>
+		<file>cinematicName</file>
+		<repeat_style>endless</repeat_style>
+		<render_zone>sky</render_zone>
+	</cinematic>
 
-		<parameter name="cinematicName" type="file" label="Cinematic file" default="" filter="*.cinematic" help="Name of cinematic file (created with Cinematic Editor)"/>
+    <parameter name="cinematicName" type="file" label="Cinematic file" default="" filter="*.cinematic" help="Name of cinematic file (created with Cinematic Editor)"/>
 
-		<help>Creates a skybox cinematic that's always centered around the viewer.</help>
+    <help>Creates a skybox cinematic that's always centered around the viewer.</help>
 
-		<model>
-			<file>models/system/editor/skybox.model</file>
-		</model>
+    <model>
+        <file>models/system/editor/skybox.model</file>
+    </model>
 
     </class>
   
 	<class name="target" placeable="true">
-	
 		<model>
-			<file>model</file>
+		  <file>model</file>
 		</model>
 		<parameter name="model" type="file" label="Model" default="models/misc/target/target.model" filter="*.model"/>
 
@@ -966,104 +1145,99 @@
 
 		<parameter name="popupRadius" type="distance" label="Popup radius" default="10.0" help="Target plays popup animation when any player comes within this range."/>
 		<sphere>
-			<radius>popupRadius</radius>
+		   <radius>popupRadius</radius>
 		</sphere>
-
+		
 		<parameter name="popupDelay" type="real" label="Random delay before popping up" default="0.0"/>
 		
-	</class>
+</class>
 
     <!-- Base class for fog controls -->
-	<class name="fog_controls" placeable="false">
+  <class name="fog_controls" placeable="false">
 
-		<fog_controls>
-			<default_zone_scale>default_zone_scale</default_zone_scale>
-			<default_zone_color>default_zone_color</default_zone_color>
+      <fog_controls>
+          <default_zone_scale>default_zone_scale</default_zone_scale>
+          <default_zone_color>default_zone_color</default_zone_color>
 
-			<view_zone_scale>view_zone_scale</view_zone_scale>
-			<view_zone_color>view_zone_color</view_zone_color>
+          <view_zone_scale>view_zone_scale</view_zone_scale>
+          <view_zone_color>view_zone_color</view_zone_color>
 
-			<skybox_zone_scale>skybox_zone_scale</skybox_zone_scale>
-			<skybox_zone_color>skybox_zone_color</skybox_zone_color>
-		</fog_controls>	
+          <skybox_zone_scale>skybox_zone_scale</skybox_zone_scale>
+          <skybox_zone_color>skybox_zone_color</skybox_zone_color>
+      </fog_controls>	
 
-		<parameter name="default_zone_scale" type="real" label="Default Depth Scale" default="1000"/>
-		<parameter name="default_zone_color" type="color" label="Default Color" default="0.35, 0.4, 0.5"/>
+      <parameter name="default_zone_scale" type="real" label="Default Depth Scale" default="1000"/>
+      <parameter name="default_zone_color" type="color" label="Default Color" default="0.35, 0.4, 0.5"/>
 
-		<parameter name="view_zone_scale" type="real" label="View Model Depth Scale" default="1000"/>
-		<parameter name="view_zone_color" type="color" label="View Model Color" default="0.35, 0.4, 0.5"/>
+      <parameter name="view_zone_scale" type="real" label="View Model Depth Scale" default="1000"/>
+      <parameter name="view_zone_color" type="color" label="View Model Color" default="0.35, 0.4, 0.5"/>
 
-		<parameter name="skybox_zone_scale" type="real" label="Skybox Depth Scale" default="1000"/>
-		<parameter name="skybox_zone_color" type="color" label="Skybox Color" default="0.35, 0.4, 0.5"/>
+      <parameter name="skybox_zone_scale" type="real" label="Skybox Depth Scale" default="1000"/>
+      <parameter name="skybox_zone_color" type="color" label="Skybox Color" default="0.35, 0.4, 0.5"/>
 
 
-		<help>Allows tuning of fog values for different rendering zones.</help>
+      <help>Allows tuning of fog values for different rendering zones.</help>
 
-		<model>
-			<file>models/system/editor/fogcontrols.model</file>
-		</model>
-	  
-	</class>
+      <model>
+        <file>models/system/editor/fogcontrols.model</file>
+      </model>
+  </class>
   
-	<class name="fog_area_modifier" placeable="false">
+  <class name="fog_area_modifier" placeable="false">
+      <fog_controls>
+          <default_zone_scale>default_zone_scale</default_zone_scale>
+          <default_zone_color>default_zone_color</default_zone_color>
+
+          <view_zone_scale>view_zone_scale</view_zone_scale>
+          <view_zone_color>view_zone_color</view_zone_color>
+
+          <skybox_zone_scale>skybox_zone_scale</skybox_zone_scale>
+          <skybox_zone_color>skybox_zone_color</skybox_zone_color>
+      </fog_controls>	
+
+      <parameter name="default_zone_scale" type="real" label="Default Depth Scale" default="1000"/>
+      <parameter name="default_zone_color" type="color" label="Default Color" default="0.35, 0.4, 0.5"/>
+
+      <parameter name="view_zone_scale" type="real" label="View Model Depth Scale" default="1000"/>
+      <parameter name="view_zone_color" type="color" label="View Model Color" default="0.35, 0.4, 0.5"/>
+
+      <parameter name="skybox_zone_scale" type="real" label="Skybox Depth Scale" default="1000"/>
+      <parameter name="skybox_zone_color" type="color" label="Skybox Color" default="0.35, 0.4, 0.5"/>
+      
+      <sphere><radius>start_blend_radius</radius></sphere>
+      <parameter name="start_blend_radius" type="distance" label="Distance to start blending into these fog settings" default="10.0"/>
+      <sphere><radius>end_blend_radius</radius></sphere>
+      <parameter name="end_blend_radius" type="distance" label="Distance to finish blending into these fog settings" default="5.0"/>
+      
+      <help>Allows tuning of fog values for areas of the world.</help>
+      
+      <model>
+        <file>models/system/editor/fogcontrols.model</file>
+      </model>
+  </class>
+
+  <class name="pathing_settings" placeable="true">
+      <model>
+         <file>models/system/editor/pathing_settings.model</file>
+      </model>
+      <parameter name="option_cell_size" type="real" label="Cell Size" default="0.30"/>
+      <parameter name="option_cell_height" type="real" label="Cell Height" default="0.40"/>
+      <parameter name="option_agent_height" type="real" label="Agent Height" default="2.00"/>
+      <parameter name="option_agent_radius" type="real" label="Agent Radius" default="0.6"/>
+      <parameter name="option_agent_max_climb" type="real" label="Agent Max Climb" default="0.90"/>
+      <parameter name="option_agent_max_slope" type="real" label="Agent Max Slope" default="45.0"/>
+      <parameter name="option_region_min_size" type="real" label="Region Min Size" default="8"/>
+      <parameter name="option_region_merge_size" type="real" label="Region Merge Size" default="20"/>
+      <parameter name="option_edge_max_len" type="real" label="Edge Max Len" default="12.0"/>
+      <parameter name="option_verts_per_poly" type="real" label="Verts Per Poly" default="6.0"/>
+      <parameter name="option_detail_sample_dist" type="real" label="Detail Sample Distance" default="6.0"/>
+      <parameter name="option_detail_sample_max_error" type="real" label="Detail Sample Max Error" default="1.0"/>
+      <parameter name="option_tile_size" type="real" label="Tile Size" default="36.0"/>
+
+      <help>Allows tuning of pathing settings to help optimize pathing</help>
+  </class>
   
-		<fog_controls>
-			<default_zone_scale>default_zone_scale</default_zone_scale>
-			<default_zone_color>default_zone_color</default_zone_color>
-
-			<view_zone_scale>view_zone_scale</view_zone_scale>
-			<view_zone_color>view_zone_color</view_zone_color>
-
-			<skybox_zone_scale>skybox_zone_scale</skybox_zone_scale>
-			<skybox_zone_color>skybox_zone_color</skybox_zone_color>
-		</fog_controls>	
-
-		<parameter name="default_zone_scale" type="real" label="Default Depth Scale" default="1000"/>
-		<parameter name="default_zone_color" type="color" label="Default Color" default="0.35, 0.4, 0.5"/>
-
-		<parameter name="view_zone_scale" type="real" label="View Model Depth Scale" default="1000"/>
-		<parameter name="view_zone_color" type="color" label="View Model Color" default="0.35, 0.4, 0.5"/>
-
-		<parameter name="skybox_zone_scale" type="real" label="Skybox Depth Scale" default="1000"/>
-		<parameter name="skybox_zone_color" type="color" label="Skybox Color" default="0.35, 0.4, 0.5"/>
-
-		<sphere><radius>start_blend_radius</radius></sphere>
-		<parameter name="start_blend_radius" type="distance" label="Distance to start blending into these fog settings" default="10.0"/>
-		<sphere><radius>end_blend_radius</radius></sphere>
-		<parameter name="end_blend_radius" type="distance" label="Distance to finish blending into these fog settings" default="5.0"/>
-
-		<help>Allows tuning of fog values for areas of the world.</help>
-
-		<model>
-		<file>models/system/editor/fogcontrols.model</file>
-		</model>
-	  
-	</class>
-
-	<class name="pathing_settings" placeable="true">
-  
-		<model>
-			<file>models/system/editor/pathing_settings.model</file>
-		</model>
-		<parameter name="option_cell_size" type="real" label="Cell Size" default="0.30"/>
-		<parameter name="option_cell_height" type="real" label="Cell Height" default="0.40"/>
-		<parameter name="option_agent_height" type="real" label="Agent Height" default="2.00"/>
-		<parameter name="option_agent_radius" type="real" label="Agent Radius" default="0.6"/>
-		<parameter name="option_agent_max_climb" type="real" label="Agent Max Climb" default="0.90"/>
-		<parameter name="option_agent_max_slope" type="real" label="Agent Max Slope" default="45.0"/>
-		<parameter name="option_region_min_size" type="real" label="Region Min Size" default="8"/>
-		<parameter name="option_region_merge_size" type="real" label="Region Merge Size" default="20"/>
-		<parameter name="option_edge_max_len" type="real" label="Edge Max Len" default="12.0"/>
-		<parameter name="option_verts_per_poly" type="real" label="Verts Per Poly" default="6.0"/>
-		<parameter name="option_detail_sample_dist" type="real" label="Detail Sample Distance" default="6.0"/>
-		<parameter name="option_detail_sample_max_error" type="real" label="Detail Sample Max Error" default="1.0"/>
-		<parameter name="option_tile_size" type="real" label="Tile Size" default="36.0"/>
-
-		<help>Allows tuning of pathing settings to help optimize pathing</help>
-	  
-	</class>
-	
-	<!-- Adding Classic Entities to this  -->
+  <!-- Adding Classic Entities to this  -->
 	<class name="breakable_emitter">
 	
 		<parent>signal_emitter</parent>
@@ -1374,7 +1548,6 @@
         <parameter name="defaultWaterOn" type="boolean" label="Default on?" default="true"/>
 		
     </class>
-	
 
 </classes>
 
@@ -1401,6 +1574,8 @@
     <exclude_group>InvisibleGeometry</exclude_group>
     <exclude_group>CommanderBuild</exclude_group>
     <exclude_group>CommanderNoBuild</exclude_group>
+    <exclude_group>SeasonalFall</exclude_group>
+    <exclude_group>SeasonalWinter</exclude_group>
 
 </reflection_probe_settings>
 
