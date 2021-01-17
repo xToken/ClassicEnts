@@ -78,9 +78,9 @@ end
 
 function ControlledConveyor:OnSetEnabled(enabled)
 	if enabled then
-		self:ForEachEntityInTrigger(function(ent) self:OnTriggerEntered(ent) end)
+		self:ForEachEntityInTrigger(self.OnTriggerEntered)
 	else
-		self:ForEachEntityInTrigger(function(ent) if ent and ent:isa("Player") and HasMixin(ent, "Moveable") then ent:ClearBaseVelocity() end end)
+		self:ForEachEntityInTrigger(self.OnTriggerExited)
 	end
 end
 
