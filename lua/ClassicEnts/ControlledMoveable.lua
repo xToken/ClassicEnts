@@ -309,9 +309,9 @@ function ControlledMoveable:OnWaypointReached()
 	if Server and not self:GetIsOpen() and self.objectType ~= ControlledMoveable.kObjectTypes.Elevator then
 		self:UpdateScaledModelPathingMesh()
 		self:AddAdditionalPhysicsModel()
+		self:SetUpdateRate(kLowUpdateRate)
 	end
 	self:OnUpdatePhysics()
-	self:SetUpdateRate(kLowUpdateRate)
 	if gDebugClassicEnts then
 		Shared.Message(string.format("Moveable %s completed move to waypoint %s at %s.", self.name, self.waypoint, ToString(self:GetOrigin())))
 	end
