@@ -46,7 +46,7 @@ function ControlledPusher:OnCreate()
 	
 	-- SignalMixin sets this on init, but I need to confirm its set on ent.
 	self.listenChannel = nil
-	self.direction = Vector(0, 1, 0) //Straight upppp tooo the mooon.
+	self.direction = Vector(0, 1, 0) -- Straight upppp tooo the mooon.
 	self.force = kDefaultForce
 	self:SetRelevancyDistance(kMaxRelevancyDistance)
 	
@@ -64,7 +64,10 @@ function ControlledPusher:OnInitialized()
 		self.direction = AnglesToVector(self:GetAngles())
 		
 		-- Editor wont allow redefining a property with the same name without crashing :/
-		if self.realForce ~= nil then
+		if self.realforce ~= nil then
+			self.force = self.realforce
+		elseif self.realForce ~= nil then
+			-- Incase anyone caught my earlier mistake and fixed it in the map
 			self.force = self.realForce
 		end
 		
@@ -94,7 +97,9 @@ end
 function ControlledPusher:OnTriggerEntered(enterEnt, triggerEnt)
 
     if self:CanPushEntity(enterEnt) then
-		
+		if gDebugClassicEnts then
+			Shared.Message(string.format("Pushing entity %s in direction %s with %s force.", enterEnt:GetId(), self.direction, self.force))
+		end
 		enterEnt:SetBaseVelocity(self.direction * self.force, true)
 		enterEnt.pushTime = Shared.GetTime()
 		
