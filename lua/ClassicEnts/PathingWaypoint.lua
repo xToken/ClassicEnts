@@ -95,3 +95,11 @@ function PathingWaypoint:OnInitialized()
 end
 
 Shared.LinkClassToMap("PathingWaypoint", PathingWaypoint.kMapName, networkVars)
+
+local function OnCommandDebugPathing(client)
+	if gDebugClassicEnts then
+		Shared.Message(string.format("Classic Entities PathingWaypoint Table %s.", ToString(kPathingWaypointObjectTable)))
+	end
+end
+
+Event.Hook("Console_centspathdebug", OnCommandDebugPathing)
