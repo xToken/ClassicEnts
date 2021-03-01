@@ -56,7 +56,10 @@ function ControlledConveyor:OnInitialized()
 		self.direction = RotationToDirection(self:GetAngles())
 		
 		-- Editor wont allow redefining a property with the same name without crashing :/
-		if self.realForce ~= nil then
+		if self.realforce ~= nil then
+			self.force = self.realforce
+		elseif self.realForce ~= nil then
+			-- Incase anyone caught my earlier mistake and fixed it in the map
 			self.force = self.realForce
 		end
 	end
@@ -80,7 +83,8 @@ function ControlledConveyor:OnSetEnabled(enabled)
 	if enabled then
 		self:ForEachEntityInTrigger(self.OnTriggerEntered)
 	else
-		self:ForEachEntityInTrigger(self.OnTriggerExited)
+		-- Clear vel but dont remove from trigger!
+		self:ForEachEntityInTrigger(self.OnClearVelocity)
 	end
 end
 
@@ -92,12 +96,16 @@ function ControlledConveyor:OnTriggerEntered(enterEnt)
 	
 end
 
-function ControlledConveyor:OnTriggerExited(exitEntity)
+function ControlledConveyor:OnClearVelocity(ent)
 
-	if exitEntity and exitEntity:isa("Player") and HasMixin(exitEntity, "Moveable") then
-		exitEntity:ClearBaseVelocity()
+	if ent and ent:isa("Player") and HasMixin(ent, "Moveable") then
+		ent:ClearBaseVelocity()
 	end
-	
+
+end
+
+function ControlledConveyor:OnTriggerExited(exitEntity)
+	self:OnClearVelocity(exitEntity)
 end
 
 Shared.LinkClassToMap("ControlledConveyor", ControlledConveyor.kMapName, networkVars)
